@@ -97,19 +97,27 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 
 ## 📝 API Endpoints
 
-### Kullanıcı İşlemleri
+### Kullanıcı İşlemleri (`/user`)
 - `POST /user/register` - Yeni kullanıcı kaydı
 - `POST /user/login` - Kullanıcı girişi
-- `GET /user/profile/<user_id>` - Kullanıcı profili
-- `PUT /user/profile/<user_id>` - Profil güncelleme
+- `GET /user/get_by_username/<username>` - Kullanıcı adına göre kullanıcı bilgisi
+- `GET /user/get_profile/<user_id>` - Kullanıcı profili
+- `PUT /user/update_status/<user_id>` - Kullanıcı durumunu güncelleme (çevrimiçi/çevrimdışı)
+- `PUT /user/update_last_seen/<user_id>` - Son görülme zamanını güncelleme
+- `PUT /user/toggle_last_seen/<user_id>` - Son görülme özelliğini açma/kapama
+- `GET /user/get_user_status/<user_id>` - Kullanıcı durumu bilgisi
+- `GET /user/get_friends_status/<user_id>` - Arkadaşların durum bilgileri
 
-### Arkadaşlık İşlemleri
-- `POST /friendship/add` - Arkadaş ekleme
-- `DELETE /friendship/remove` - Arkadaş silme
+### Arkadaşlık İşlemleri (`/friendship`)
+- `POST /friendship/add` - Arkadaş ekleme isteği gönderme
 - `GET /friendship/list/<user_id>` - Arkadaş listesi
+- `GET /friendship/pending/<user_id>` - Bekleyen arkadaşlık istekleri
+- `GET /friendship/sent/<user_id>` - Gönderilen arkadaşlık istekleri
+- `DELETE /friendship/remove` - Arkadaşlığı sonlandırma
 
-### Mesaj İşlemleri
-- `GET /message/history/<user_id>/<friend_id>` - Mesaj geçmişi
+### Mesaj İşlemleri (`/message`)
+- `GET /message/history/<user_id>/<friend_id>` - İki kullanıcı arasındaki mesaj geçmişi
+- `GET /message/active_chats/<user_id>` - Aktif sohbetler
 - `DELETE /message/<message_id>` - Mesaj silme
 - `DELETE /message/chat/<user_id>/<friend_id>` - Sohbet silme
 
@@ -122,6 +130,66 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 - `receive_message` - Mesaj alma
 - `message_deleted` - Mesaj silme bildirimi
 - `chat_deleted` - Sohbet silme bildirimi
+
+### API İstek Formatları
+
+#### Kullanıcı Kaydı
+```json
+POST /user/register
+{
+    "username": "string",
+    "email": "string",
+    "password": "string",
+    "display_name": "string"
+}
+```
+
+#### Kullanıcı Girişi
+```json
+POST /user/login
+{
+    "email": "string",
+    "password": "string"
+}
+```
+
+#### Arkadaş Ekleme
+```json
+POST /friendship/add
+{
+    "user_id": "integer",
+    "friend_id": "integer"
+}
+```
+
+#### Mesaj Gönderme (WebSocket)
+```json
+{
+    "sender_id": "integer",
+    "receiver_id": "integer",
+    "content": "string"
+}
+```
+
+### API Yanıt Formatları
+
+#### Başarılı Yanıt
+```json
+{
+    "status": "success",
+    "message": "İşlem başarılı",
+    "data": { ... }
+}
+```
+
+#### Hata Yanıtı
+```json
+{
+    "status": "error",
+    "message": "Hata mesajı",
+    "error_code": "integer"
+}
+```
 
 ## 🔒 Güvenlik
 - CORS koruması
