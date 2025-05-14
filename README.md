@@ -63,23 +63,104 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
    ```
 
 ### Frontend Kurulumu
-1. Node.js'i yükleyin
-2. Frontend klasörüne gidin:
+1. **Gereksinimler**
+   - Node.js (v16 veya üzeri)
+   - npm (Node.js ile birlikte gelir)
+   - Git
+
+2. **Projeyi İndirme**
    ```bash
-   cd chatapp-frontend
+   # Projeyi klonlayın
+   git clone https://github.com/GokhanGuclu/chatapp.git
+   cd chatapp/chatapp-frontend
    ```
-3. Bağımlılıkları yükleyin:
+
+3. **Bağımlılıkları Yükleme**
    ```bash
+   # Tüm bağımlılıkları yükleyin
    npm install
    ```
-4. Geliştirme modunda başlatın:
+
+4. **Geliştirme Modunda Çalıştırma**
    ```bash
+   # Sadece web uygulaması olarak çalıştırma
    npm start
-   ```
-5. Masaüstü uygulaması olarak başlatmak için:
-   ```bash
+   # Tarayıcıda http://localhost:3000 adresinde açılacak
+
+   # Electron uygulaması olarak çalıştırma
    npm run electron-dev
+   # Bu komut hem web sunucusunu hem de Electron uygulamasını başlatır
    ```
+
+5. **Üretim Sürümü Oluşturma**
+   ```bash
+   # Web uygulaması için build
+   npm run build
+   # Build klasöründe optimize edilmiş dosyalar oluşur
+
+   # Electron uygulaması için paketleme
+   npm run electron-pack
+   # dist klasöründe kurulabilir uygulama oluşur
+   ```
+
+6. **Geliştirme Araçları**
+   - React Developer Tools (Tarayıcı eklentisi)
+   - Redux DevTools (Tarayıcı eklentisi)
+   - ESLint (Kod kalitesi kontrolü)
+   - Prettier (Kod formatlama)
+
+7. **Önemli Komutlar**
+   ```bash
+   # Geliştirme sunucusunu başlatma
+   npm start
+
+   # Testleri çalıştırma
+   npm test
+
+   # Build oluşturma
+   npm run build
+
+   # Electron uygulamasını geliştirme modunda çalıştırma
+   npm run electron-dev
+
+   # Electron uygulamasını paketleme
+   npm run electron-pack
+
+   # Bağımlılıkları güncelleme
+   npm update
+
+   # ESLint ile kod kontrolü
+   npm run lint
+   ```
+
+8. **Proje Yapısı**
+   ```
+   chatapp-frontend/
+   ├── public/                 # Statik dosyalar
+   │   ├── electron.js        # Electron ana süreç
+   │   └── preload.js         # Electron önyükleme
+   ├── src/                   # Kaynak kodlar
+   │   ├── components/        # React bileşenleri
+   │   ├── pages/            # Sayfa bileşenleri
+   │   ├── context/          # React context'leri
+   │   ├── hooks/            # Özel React hooks'ları
+   │   ├── utils/            # Yardımcı fonksiyonlar
+   │   └── App.js            # Ana uygulama bileşeni
+   ├── package.json          # Proje yapılandırması
+   └── README.md             # Proje dokümantasyonu
+   ```
+
+9. **Olası Sorunlar ve Çözümleri**
+   - **Node modülleri hatası**: `npm install` komutunu tekrar çalıştırın
+   - **Port çakışması**: 3000 portu kullanımdaysa, `PORT=3001 npm start` komutunu kullanın
+   - **Electron build hatası**: `npm run electron-pack` öncesi `npm run build` komutunu çalıştırın
+   - **CORS hatası**: Backend'in çalıştığından ve CORS ayarlarının doğru olduğundan emin olun
+
+10. **Geliştirme İpuçları**
+    - Hot Reload aktif, değişiklikler anında görüntülenir
+    - Electron uygulamasında DevTools'u açmak için: `Ctrl+Shift+I`
+    - React bileşenlerini test etmek için: `npm test`
+    - Kod formatlamak için: `npm run format`
 
 ## 🚀 Kullanım
 
