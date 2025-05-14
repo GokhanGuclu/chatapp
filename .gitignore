@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.idea/
+*.db
+*.sqlite3
+*.log
+client1.py
+node_modules/
+chatapp-frontend/node_modules/
