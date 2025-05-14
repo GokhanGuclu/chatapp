@@ -44,123 +44,204 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 - React Icons
 - React Hot Toast (Bildirimler)
 
-## 📦 Kurulum
+## 📦 Proje Kurulumu
 
-### Backend Kurulumu
-1. Python 3.x'i yükleyin
-2. Backend klasörüne gidin:
+### 1. Gereksinimler
+- **Sistem Gereksinimleri**
+  - Windows 10 veya üzeri
+  - En az 4GB RAM
+  - 1GB boş disk alanı
+  - İnternet bağlantısı
+
+- **Yazılım Gereksinimleri**
+  - Git (v2.x veya üzeri)
+  - Python 3.x
+  - Node.js (v16 veya üzeri)
+  - npm (Node.js ile birlikte gelir)
+  - SQL Server (2019 veya üzeri)
+  - Visual Studio Code (önerilen)
+
+### 2. Projeyi İndirme
+```bash
+# Projeyi klonlayın
+git clone https://github.com/GokhanGuclu/chatapp.git
+
+# Proje klasörüne girin
+cd chatapp
+```
+
+### 3. Backend Kurulumu
+1. **Backend Klasörüne Geçiş**
    ```bash
    cd backend
    ```
-3. Gerekli paketleri yükleyin:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Veritabanı bağlantısını yapılandırın (`config.py`)
-5. Uygulamayı başlatın:
-   ```bash
-   python run.py
-   ```
 
-### Frontend Kurulumu
-1. **Gereksinimler**
-   - Node.js (v16 veya üzeri)
-   - npm (Node.js ile birlikte gelir)
-   - Git
-
-2. **Projeyi İndirme**
+2. **Python Sanal Ortam Oluşturma**
    ```bash
-   # Projeyi klonlayın
-   git clone https://github.com/GokhanGuclu/chatapp.git
-   cd chatapp/chatapp-frontend
+   # Windows için
+   python -m venv venv
+   venv\Scripts\activate
+
+   # Linux/Mac için
+   python3 -m venv venv
+   source venv/bin/activate
    ```
 
 3. **Bağımlılıkları Yükleme**
    ```bash
-   # Tüm bağımlılıkları yükleyin
+   pip install -r requirements.txt
+   ```
+
+4. **Veritabanı Kurulumu**
+   - SQL Server'ın çalıştığından emin olun
+   - Veritabanı bağlantı bilgilerini `config.py` dosyasında kontrol edin
+   - Gerekirse `.env` dosyası oluşturun
+
+5. **Backend'i Başlatma**
+   ```bash
+   python run.py
+   # Sunucu http://localhost:5000 adresinde çalışacak
+   ```
+
+### 4. Frontend Kurulumu
+1. **Frontend Klasörüne Geçiş**
+   ```bash
+   cd ../chatapp-frontend
+   ```
+
+2. **Bağımlılıkları Yükleme**
+   ```bash
    npm install
    ```
 
-4. **Geliştirme Modunda Çalıştırma**
+3. **Geliştirme Modunda Çalıştırma**
    ```bash
-   # Sadece web uygulaması olarak çalıştırma
+   # Web uygulaması olarak çalıştırma
    npm start
-   # Tarayıcıda http://localhost:3000 adresinde açılacak
+   # http://localhost:3000 adresinde açılacak
 
    # Electron uygulaması olarak çalıştırma
    npm run electron-dev
-   # Bu komut hem web sunucusunu hem de Electron uygulamasını başlatır
    ```
 
-5. **Üretim Sürümü Oluşturma**
+4. **Üretim Sürümü Oluşturma**
    ```bash
-   # Web uygulaması için build
+   # Web uygulaması için
    npm run build
-   # Build klasöründe optimize edilmiş dosyalar oluşur
 
-   # Electron uygulaması için paketleme
+   # Electron uygulaması için
    npm run electron-pack
-   # dist klasöründe kurulabilir uygulama oluşur
    ```
 
-6. **Geliştirme Araçları**
-   - React Developer Tools (Tarayıcı eklentisi)
-   - Redux DevTools (Tarayıcı eklentisi)
-   - ESLint (Kod kalitesi kontrolü)
-   - Prettier (Kod formatlama)
+### 5. Proje Yapısı
+```
+chatapp/
+├── backend/                 # Backend uygulaması
+│   ├── app/                # Uygulama kodları
+│   │   ├── models/        # Veritabanı modelleri
+│   │   ├── routes/        # API rotaları
+│   │   └── controllers/   # İş mantığı
+│   ├── config.py          # Yapılandırma
+│   ├── requirements.txt   # Python bağımlılıkları
+│   └── run.py            # Başlatma dosyası
+│
+├── chatapp-frontend/       # Frontend uygulaması
+│   ├── public/            # Statik dosyalar
+│   │   ├── electron.js    # Electron ana süreç
+│   │   └── preload.js     # Electron önyükleme
+│   ├── src/              # Kaynak kodlar
+│   │   ├── components/   # React bileşenleri
+│   │   ├── pages/       # Sayfa bileşenleri
+│   │   ├── context/     # React context'leri
+│   │   └── utils/       # Yardımcı fonksiyonlar
+│   └── package.json     # Node.js bağımlılıkları
+│
+└── README.md             # Proje dokümantasyonu
+```
 
-7. **Önemli Komutlar**
+### 6. Geliştirme Ortamı
+- **Backend Geliştirme**
+  - Python IDE (VS Code önerilen)
+  - SQL Server Management Studio
+  - Postman (API testi için)
+
+- **Frontend Geliştirme**
+  - VS Code eklentileri:
+    - ESLint
+    - Prettier
+    - React Developer Tools
+    - Redux DevTools
+
+### 7. Sık Karşılaşılan Sorunlar ve Çözümleri
+
+#### Backend Sorunları
+- **Veritabanı Bağlantı Hatası**
+  - SQL Server servisinin çalıştığından emin olun
+  - Bağlantı bilgilerini kontrol edin
+  - Firewall ayarlarını kontrol edin
+
+- **Port Çakışması**
+  - 5000 portu kullanımdaysa:
+    ```bash
+    set FLASK_RUN_PORT=5001
+    python run.py
+    ```
+
+#### Frontend Sorunları
+- **Node Modülleri Hatası**
+  ```bash
+  rm -rf node_modules
+  npm install
+  ```
+
+- **Port Çakışması**
+  ```bash
+  # 3000 portu kullanımdaysa
+  set PORT=3001 && npm start
+  ```
+
+- **Electron Build Hatası**
+  ```bash
+  npm run build
+  npm run electron-pack
+  ```
+
+### 8. Test ve Doğrulama
+1. **Backend Testi**
    ```bash
-   # Geliştirme sunucusunu başlatma
-   npm start
+   cd backend
+   python -m pytest
+   ```
 
-   # Testleri çalıştırma
+2. **Frontend Testi**
+   ```bash
+   cd chatapp-frontend
    npm test
-
-   # Build oluşturma
-   npm run build
-
-   # Electron uygulamasını geliştirme modunda çalıştırma
-   npm run electron-dev
-
-   # Electron uygulamasını paketleme
-   npm run electron-pack
-
-   # Bağımlılıkları güncelleme
-   npm update
-
-   # ESLint ile kod kontrolü
-   npm run lint
    ```
 
-8. **Proje Yapısı**
-   ```
-   chatapp-frontend/
-   ├── public/                 # Statik dosyalar
-   │   ├── electron.js        # Electron ana süreç
-   │   └── preload.js         # Electron önyükleme
-   ├── src/                   # Kaynak kodlar
-   │   ├── components/        # React bileşenleri
-   │   ├── pages/            # Sayfa bileşenleri
-   │   ├── context/          # React context'leri
-   │   ├── hooks/            # Özel React hooks'ları
-   │   ├── utils/            # Yardımcı fonksiyonlar
-   │   └── App.js            # Ana uygulama bileşeni
-   ├── package.json          # Proje yapılandırması
-   └── README.md             # Proje dokümantasyonu
-   ```
+3. **Manuel Test**
+   - Backend API'lerini Postman ile test edin
+   - Web uygulamasını farklı tarayıcılarda test edin
+   - Electron uygulamasını test edin
 
-9. **Olası Sorunlar ve Çözümleri**
-   - **Node modülleri hatası**: `npm install` komutunu tekrar çalıştırın
-   - **Port çakışması**: 3000 portu kullanımdaysa, `PORT=3001 npm start` komutunu kullanın
-   - **Electron build hatası**: `npm run electron-pack` öncesi `npm run build` komutunu çalıştırın
-   - **CORS hatası**: Backend'in çalıştığından ve CORS ayarlarının doğru olduğundan emin olun
+### 9. Deployment (Dağıtım)
+1. **Backend Deployment**
+   - Python sanal ortamı oluşturun
+   - Bağımlılıkları yükleyin
+   - Gunicorn veya uWSGI ile sunucu başlatın
+   - Nginx veya Apache ile reverse proxy yapılandırın
 
-10. **Geliştirme İpuçları**
-    - Hot Reload aktif, değişiklikler anında görüntülenir
-    - Electron uygulamasında DevTools'u açmak için: `Ctrl+Shift+I`
-    - React bileşenlerini test etmek için: `npm test`
-    - Kod formatlamak için: `npm run format`
+2. **Frontend Deployment**
+   - Web uygulaması için:
+     ```bash
+     npm run build
+     # build klasörünü web sunucusuna yükleyin
+     ```
+   - Electron uygulaması için:
+     ```bash
+     npm run electron-pack
+     # dist klasöründeki kurulum dosyasını dağıtın
+     ```
 
 ## 🚀 Kullanım
 
