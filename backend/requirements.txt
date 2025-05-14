@@ -4,3 +4,4 @@ Flask-SocketIO==5.3.5
 python-socketio==5.8.0
 python-engineio==4.8.0
 eventlet==0.33.3
+python-dotenv==1.0.0

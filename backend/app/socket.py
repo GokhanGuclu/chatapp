@@ -3,8 +3,7 @@ from flask import request
 from app import db
 from app.models.message_model import Message
 from app.controllers.user_controller import User
-from backend.app.models.friendship_model import Friendship
-from app.models.notification import Notification
+from app.models.friendship_model import Friendship
 from datetime import datetime, timedelta
 from sqlalchemy import text
 

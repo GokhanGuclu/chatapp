@@ -11,3 +11,4 @@ venv/
 client1.py
 node_modules/
 chatapp-frontend/node_modules/
+backend/ayar.py
