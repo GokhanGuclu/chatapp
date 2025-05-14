@@ -141,6 +141,6 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
 ## 📞 İletişim
-Gökhan Güçlü - [@github](https://github.com/GokhanGouclu) [@email](gokanguclu@outlook.com)
+Gökhan Güçlü - [@github](https://github.com/GokhanGouclu) - [@email](gokanguclu@outlook.com)
 
 Proje Linki: [https://github.com/Gokhanguclu/chatapp](https://github.com/GokhanGuclu/chatapp)
