@@ -10,6 +10,7 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 - Masaüstü uygulaması (Electron) ve web desteği
 - Özel pencere kontrolü (minimize, maximize, close)
 - Responsive tasarım
+- Gerçek zamanlı bildirim sistemi
 
 ### Mesajlaşma Özellikleri
 - Birebir mesajlaşma
@@ -18,6 +19,8 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 - Sohbet silme
 - Çevrimiçi/çevrimdışı durumu
 - Son görülme zamanı
+- Okundu bilgisi
+- Mesaj bildirimleri
 
 ### Kullanıcı Özellikleri
 - Kullanıcı kaydı ve girişi
@@ -25,6 +28,18 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 - Arkadaş listesi
 - Profil ayarları
 - Profil resmi desteği
+- Arkadaşlık isteği bildirimleri
+- Bildirim yönetimi (okundu/okunmadı)
+- Bildirim geçmişi
+
+### Bildirim Sistemi
+- Gerçek zamanlı bildirimler
+- Farklı bildirim türleri (mesaj, arkadaşlık isteği)
+- Bildirim sayacı
+- Bildirim okundu/okunmadı durumu
+- Bildirim geçmişi görüntüleme
+- Tüm bildirimleri okundu olarak işaretleme
+- Bildirim detayları (gönderen, zaman, içerik)
 
 ## 🛠️ Teknolojiler
 
@@ -35,6 +50,8 @@ Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electr
 - SQLAlchemy (ORM)
 - SQL Server (Veritabanı)
 - Flask-CORS (CORS desteği)
+- T-SQL Stored Procedures
+- WebSocket desteği
 
 ### Frontend
 - React.js
@@ -140,7 +157,8 @@ chatapp/
 │   ├── app/                # Uygulama kodları
 │   │   ├── models/        # Veritabanı modelleri
 │   │   ├── routes/        # API rotaları
-│   │   └── controllers/   # İş mantığı
+│   │   ├── controllers/   # İş mantığı
+│   │   └── socket.py      # WebSocket işlemleri
 │   ├── config.py          # Yapılandırma
 │   ├── requirements.txt   # Python bağımlılıkları
 │   └── run.py            # Başlatma dosyası
@@ -205,6 +223,22 @@ chatapp/
   npm run build
   npm run electron-pack
   ```
+
+#### Bildirim Sistemi Sorunları
+- **Bildirimler Görünmüyor**
+  - WebSocket bağlantısını kontrol edin
+  - Kullanıcı oturumunun aktif olduğundan emin olun
+  - Tarayıcı konsolunda hata mesajlarını kontrol edin
+
+- **Bildirim Sayacı Güncellenmiyor**
+  - Socket.IO bağlantısını yeniden başlatın
+  - Sayfayı yenileyin
+  - Kullanıcı oturumunu kapatıp tekrar açın
+
+- **Bildirimler Okundu Olarak İşaretlenmiyor**
+  - Veritabanı bağlantısını kontrol edin
+  - API endpoint'lerinin doğru çalıştığından emin olun
+  - Kullanıcı yetkilerini kontrol edin
 
 ### 8. Test ve Doğrulama
 1. **Backend Testi**
@@ -283,6 +317,13 @@ chatapp/
 - `DELETE /message/<message_id>` - Mesaj silme
 - `DELETE /message/chat/<user_id>/<friend_id>` - Sohbet silme
 
+### Bildirim İşlemleri (`/notification`)
+- `GET /notification/get_notifications/<user_id>` - Kullanıcının tüm bildirimlerini getir
+- `POST /notification/mark_read/<notification_id>/<user_id>` - Bildirimi okundu olarak işaretle
+- `POST /notification/mark_all_read/<user_id>` - Tüm bildirimleri okundu olarak işaretle
+- `GET /notification/unread_count/<user_id>` - Okunmamış bildirim sayısını getir
+- `DELETE /notification/delete/<notification_id>` - Bildirimi sil
+
 ### WebSocket Events
 - `connect` - Bağlantı kurma
 - `disconnect` - Bağlantı kesme
@@ -292,6 +333,13 @@ chatapp/
 - `receive_message` - Mesaj alma
 - `message_deleted` - Mesaj silme bildirimi
 - `chat_deleted` - Sohbet silme bildirimi
+- `get_notifications` - Bildirim sayısını alma
+- `notification_count` - Bildirim sayısı güncelleme
+- `receive_notification` - Yeni bildirim alma
+- `notification_read` - Bildirim okundu bildirimi
+- `friend_request_received` - Arkadaşlık isteği alma
+- `friend_request_sent` - Arkadaşlık isteği gönderme
+- `friend_request_accepted` - Arkadaşlık isteği kabul edildi bildirimi
 
 ### API İstek Formatları
 
@@ -333,6 +381,32 @@ POST /friendship/add
 }
 ```
 
+#### Bildirim İşaretleme
+```json
+POST /notification/mark_read/<notification_id>/<user_id>
+{
+    "notification_id": "integer",
+    "user_id": "integer"
+}
+```
+
+#### Tüm Bildirimleri İşaretleme
+```json
+POST /notification/mark_all_read/<user_id>
+{
+    "user_id": "integer"
+}
+```
+
+#### Bildirim Silme
+```json
+DELETE /notification/delete/<notification_id>
+{
+    "notification_id": "integer",
+    "user_id": "integer"
+}
+```
+
 ### API Yanıt Formatları
 
 #### Başarılı Yanıt
@@ -350,6 +424,32 @@ POST /friendship/add
     "status": "error",
     "message": "Hata mesajı",
     "error_code": "integer"
+}
+```
+
+#### Başarılı Bildirim Yanıtı
+```json
+{
+    "status": "success",
+    "notifications": [
+        {
+            "id": "integer",
+            "type": "string",
+            "content": "string",
+            "is_read": "boolean",
+            "created_at": "datetime",
+            "sender_username": "string",
+            "sender_profile_picture": "string"
+        }
+    ]
+}
+```
+
+#### Bildirim Sayacı Yanıtı
+```json
+{
+    "status": "success",
+    "count": "integer"
 }
 ```
 
