@@ -106,6 +106,10 @@ const ChatWindow = ({ friend }) => {
           sender: parseInt(msg.from) === userId ? "Sen" : friend.username,
           text: msg.message
         }]);
+        // Aktif sohbetleri güncelle
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('refreshActiveChats'));
+        }
       });
 
       socket.on("user_status_change", (data) => {
@@ -169,6 +173,24 @@ const ChatWindow = ({ friend }) => {
     });
 
     setNewMessage("");
+    handleOpenChat(friend);
+
+    // Aktif sohbetleri güncelle
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      window.dispatchEvent(new CustomEvent('refreshActiveChats'));
+    }
+  };
+
+  const handleOpenChat = async (friend) => {
+    const userId = localStorage.getItem("userId");
+    try {
+      await axios.get(`http://localhost:5000/message/open_chat/${userId}/${friend.id}`);
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('refreshActiveChats'));
+      }
+    } catch (e) {
+      // Yine de sohbeti aç
+    }
   };
 
   // Sağ tık menüsünü kapat

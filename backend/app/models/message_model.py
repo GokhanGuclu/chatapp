@@ -89,3 +89,109 @@ class Message(db.Model):
             db.session.rollback()
             print(f"Mesaj silinirken hata: {str(e)}")
             return False
+        
+    @staticmethod
+    def open_chat(user_id, friend_id):
+
+        sql_check = text("""
+            SELECT * FROM active_chats
+            WHERE user_id = :user_id AND friend_id = :friend_id
+        """)
+
+        try:
+            result = db.session.execute(sql_check, {"user_id": user_id, "friend_id": friend_id}).fetchone()
+
+        except Exception as e:
+            print(f"Sohbet açılırken hata: {str(e)}")
+            return False
+        
+        if not result:
+            sql_insert = text("""
+                INSERT INTO active_chats (user_id, friend_id, isopen) 
+                VALUES (:user_id, :friend_id, 1)
+            """)
+            try:
+                db.session.execute(sql_insert, {"user_id": user_id, "friend_id": friend_id})
+                db.session.commit()
+                return True
+            except Exception as e:
+                db.session.rollback()
+                print(f"Sohbet açılırken hata: {str(e)}")
+                return False
+        
+        else:
+            sql_open = text("""
+                UPDATE active_chats
+                SET isopen = 1
+                WHERE user_id = :user_id AND friend_id = :friend_id
+            """)
+
+            try:
+                db.session.execute(sql_open, {"user_id": user_id, "friend_id": friend_id})
+                db.session.commit()
+                return True
+            except Exception as e:
+                db.session.rollback()
+                print(f"Sohbet açılırken hata: {str(e)}")
+                return False
+    @staticmethod
+    def close_chat(user_id, friend_id):
+
+        sql_check = text("""
+            SELECT * FROM active_chats
+            WHERE user_id = :user_id AND friend_id = :friend_id
+        """)
+
+        try:
+            result = db.session.execute(sql_check, {"user_id": user_id, "friend_id": friend_id}).fetchone()
+
+        except Exception as e:
+            print(f"Sohbet açılırken hata: {str(e)}")
+            return False
+        
+        if not result:
+            sql_insert = text("""
+                INSERT INTO active_chats (user_id, friend_id, isopen)
+                VALUES (:user_id, :friend_id, 0)
+            """)
+            db.session.execute(sql_insert, {"user_id": user_id, "friend_id": friend_id})
+            db.session.commit()
+        
+        else:
+
+            sql_close = text("""
+                UPDATE active_chats
+                SET isopen = 0
+                WHERE user_id = :user_id AND friend_id = :friend_id
+            """)
+
+            try:
+                db.session.execute(sql_close, {"user_id": user_id, "friend_id": friend_id})
+                db.session.commit()
+                return True
+            except Exception as e:
+                db.session.rollback()
+                print(f"Sohbet kapatılırken hata: {str(e)}")
+                return False
+        
+    def get_active_chats(user_id):
+        sql_active = text("""
+            SELECT
+                rc.user_id,
+                rc.friend_id,
+                rc.last_message_content,
+                u.username AS friend_username,
+                u.profile_picture AS friend_profile_picture,
+                rc.isopen,
+                rc.last_message_time
+            FROM recent_chats_view rc
+            JOIN users u ON u.id = rc.friend_id
+            WHERE rc.user_id = :user_id AND rc.isopen = 1
+        """)
+        try:
+            chats = db.session.execute(sql_active, {"user_id": user_id}).fetchall()
+            chat_list = [dict(row._mapping) for row in chats]
+            return chat_list
+        except Exception as e:
+            print(f"Aktif sohbetler getirilirken hata: {str(e)}")
+            return []

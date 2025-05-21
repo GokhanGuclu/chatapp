@@ -14,7 +14,7 @@ const socket = io("http://localhost:5000", {
   withCredentials: true
 });
 
-const Sidebar = ({ user, onLogout, onSelectMenu, recentChats, onSelectFriend }) => {
+const Sidebar = ({ user, onLogout, onSelectMenu, onSelectFriend, activeChats }) => {
   // Profil bilgileri için local state
   const [profile, setProfile] = useState({
     displayName: user.username,
@@ -23,6 +23,9 @@ const Sidebar = ({ user, onLogout, onSelectMenu, recentChats, onSelectFriend }) 
   
   // Bildirim sayısı için state
   const [notificationCount, setNotificationCount] = useState(0);
+
+  const [closingChatIds, setClosingChatIds] = useState([]);
+  const [visibleChats, setVisibleChats] = useState(activeChats);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -72,6 +75,22 @@ const Sidebar = ({ user, onLogout, onSelectMenu, recentChats, onSelectFriend }) 
       socket.off("connect");
     };
   }, [user.id]);
+
+  useEffect(() => {
+    setVisibleChats(activeChats);
+  }, [activeChats]);
+
+  const handleCloseChat = async (friendId) => {
+    setClosingChatIds(prev => [...prev, friendId]);
+    try {
+      await axios.get(`http://localhost:5000/message/close_chat/${user.id}/${friendId}`);
+      setVisibleChats(prev => prev.filter(chat => chat.friend_id !== friendId));
+    } catch (e) {
+      // Hata yönetimi
+    } finally {
+      setClosingChatIds(prev => prev.filter(id => id !== friendId));
+    }
+  };
 
   return (
     <div style={{
@@ -145,24 +164,85 @@ const Sidebar = ({ user, onLogout, onSelectMenu, recentChats, onSelectFriend }) 
         padding: '10px'
       }}>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {recentChats.map((chat, index) => (
-            <li 
-              key={index}
-              onClick={() => onSelectFriend(chat)}
-              style={{
-                padding: '8px',
-                cursor: 'pointer',
-                color: '#ccc',
-                transition: 'background-color 0.2s',
-                borderRadius: '4px',
-                marginBottom: '4px'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#252525'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-            >
-              {chat.username}
-            </li>
-          ))}
+          {visibleChats
+            .filter(chat => Number(chat.isopen) === 1)
+            .map((chat, index) => (
+              <li 
+                key={index}
+                style={{
+                  padding: '8px',
+                  color: '#ccc',
+                  transition: 'background-color 0.2s',
+                  borderRadius: '4px',
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  position: 'relative'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#252525'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                {/* Sohbeti açan alan */}
+                <div
+                  onClick={() => onSelectFriend({
+                    id: chat.friend_id,
+                    username: chat.friend_username,
+                    profile_picture: chat.friend_profile_picture
+                  })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer', flexDirection: 'column', alignItems: 'flex-start' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img
+                      src={chat.friend_profile_picture ? `http://localhost:5000/pp/${chat.friend_profile_picture}` : '/default_avatar.png'}
+                      alt="Profil"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        marginRight: '8px',
+                        border: '2px solid #252525',
+                        background: '#222'
+                      }}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 500, color: '#fff', display: 'block' }}>{chat.friend_username || chat.friend_id}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: '#bbb', fontSize: '13px', marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                          {chat.last_message_content && chat.last_message_content.length > 30
+                            ? chat.last_message_content.slice(0, 30) + '...'
+                            : chat.last_message_content || ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Kapatma butonu */}
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleCloseChat(chat.friend_id);
+                  }}
+                  disabled={closingChatIds.includes(chat.friend_id)}
+                  style={{
+                    marginLeft: 'auto',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ff5555',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                    padding: '0 6px',
+                    borderRadius: '50%',
+                    transition: 'background 0.2s',
+                    outline: 'none'
+                  }}
+                  title="Sohbeti kapat"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
         </ul>
       </div>
 

@@ -182,33 +182,26 @@ class MessageController:
             }), 500
 
     @staticmethod
-    def delete_chat(user_id, friend_id):
-        try:
-            sql_delete = text("""
-                DELETE FROM messages 
-                WHERE (sender_id = :user_id AND receiver_id = :friend_id)
-                OR (sender_id = :friend_id AND receiver_id = :user_id)
-            """)
-            result = db.session.execute(sql_delete, {
-                "user_id": user_id,
-                "friend_id": friend_id
-            })
-            db.session.commit()
+    def open_chat(user_id, friend_id):
+        Message.open_chat(user_id, friend_id)
+        return jsonify({
+            'status': 'success',
+            'message': 'Sohbet açıldı'
+        }), 200
 
-            emit('chat_deleted', {
-                'deleted_by': user_id,
-                'friend_id': friend_id
-            }, room=str(friend_id))
+    @staticmethod
+    def close_chat(user_id, friend_id):
+        Message.close_chat(user_id, friend_id)
+        return jsonify({
+            'status': 'success',
+            'message': 'Sohbet kapatıldı'
+        }), 200
 
-            return jsonify({
-                'status': 'success',
-                'message': 'Sohbet mesajları başarıyla silindi',
-                'deleted_count': result.rowcount
-            }), 200
-
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({
-                'status': 'error',
-                'message': str(e)
-            }), 500
+    @staticmethod
+    def get_active_chats(user_id):
+        chats = Message.get_active_chats(user_id)
+        chat_list = [dict(getattr(row, "_mapping", row)) for row in chats]
+        return jsonify({
+            'status': 'success',
+            'chats': chat_list
+        }), 200

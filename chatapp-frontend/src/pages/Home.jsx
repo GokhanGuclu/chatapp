@@ -14,6 +14,7 @@ const Home = () => {
   const userId = localStorage.getItem("userId");
   const username = localStorage.getItem("username");
   const [title, setTitle] = useState('Chat App');
+  const [activeChats, setActiveChats] = useState([]);
 
   useEffect(() => {
     if (!userId) return;
@@ -29,6 +30,29 @@ const Home = () => {
       .catch(error => {
         console.error("Arkadaş listesi alınamadı:", error);
       });
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    axios.get(`http://localhost:5000/message/get_active_chats/${userId}`)
+      .then(res => {
+        const sorted = res.data.chats.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+        setActiveChats(sorted);
+      })
+      .catch(() => setActiveChats([]));
+  }, [userId]);
+
+  useEffect(() => {
+    const refreshHandler = () => {
+      axios.get(`http://localhost:5000/message/get_active_chats/${userId}`)
+        .then(res => {
+          const sorted = res.data.chats.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+          setActiveChats(sorted);
+        })
+        .catch(() => setActiveChats([]));
+    };
+    window.addEventListener('refreshActiveChats', refreshHandler);
+    return () => window.removeEventListener('refreshActiveChats', refreshHandler);
   }, [userId]);
 
   useEffect(() => {
@@ -82,8 +106,8 @@ const Home = () => {
           }}
           onLogout={handleLogout}
           onSelectMenu={handleMenuSelect}
-          recentChats={friends}
           onSelectFriend={handleSelectFriend}
+          activeChats={activeChats}
         />
         <div style={{ 
           flex: 1,
