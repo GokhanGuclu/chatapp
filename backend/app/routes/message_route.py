@@ -7,9 +7,6 @@ message_bp = Blueprint('message', __name__, url_prefix='/message')
 def get_message_history(user_id, friend_id):
     return MessageController.get_message_history(user_id, friend_id)
 
-@message_bp.route('/send_message', methods=['POST'])
-def send_message():
-    return MessageController.send_message()
 
 @message_bp.route('/delete/<int:message_id>', methods=['DELETE'])
 def delete_message(message_id):

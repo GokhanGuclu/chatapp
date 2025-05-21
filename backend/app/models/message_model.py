@@ -36,28 +36,6 @@ class Message(db.Model):
             return []
     
     @staticmethod
-    def send_message(sender_id, receiver_id, content):
-        """Yeni bir mesaj gönder"""
-        try:
-            new_message = text(""" 
-            INSERT INTO messages (sender_id, receiver_id, content, sent_at)
-            VALUES (:sender_id, :receiver_id, :content, :sent_at)
-            RETURNING id
-            """)
-            db.session.execute(new_message, {
-                "sender_id": sender_id,
-                "receiver_id": receiver_id,
-                "content": content,
-                "sent_at": datetime.utcnow()
-            })
-            db.session.commit()
-            return new_message
-        except Exception as e:
-            db.session.rollback()
-            print(f"Mesaj gönderilirken hata: {str(e)}")
-            return None
-
-    @staticmethod
     def check_message_exists(message_id, user_id):
         """Mesajın varlığını ve kullanıcının yetkisini kontrol et"""
         sql_check = text("""

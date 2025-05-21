@@ -121,28 +121,75 @@ def handle_send_message(data):
         emit('error', {'message': 'Hedef kullanıcı veya mesaj boş olamaz.'}, room=sender_id)
         return
 
-    print(f"{sender_id} -> {receiver_id}: {message}")
+    try:
+        # Stored procedure ile mesaj ve bildirim ekle
+        sql = text("""
+            EXEC sp_SendMessageAndNotify
+                @sender_id=:sender_id,
+                @receiver_id=:receiver_id,
+                @content=:content;
+        """)
+        db.session.execute(sql, {
+            "sender_id": sender_id,
+            "receiver_id": receiver_id,
+            "content": message
+        })
+        db.session.commit()
 
-    new_message = Message(
-        sender_id=sender_id,
-        receiver_id=receiver_id,
-        content=message,
-        sent_at=datetime.utcnow() + timedelta(hours=3)
-    )
-    db.session.add(new_message)
-    db.session.commit()
+        # Eklenen mesajı çek
+        sql_get = text("""
+            SELECT TOP 1 id, sent_at FROM messages
+            WHERE sender_id = :sender_id AND receiver_id = :receiver_id
+            ORDER BY id DESC;
+        """)
+        result = db.session.execute(sql_get, {
+            "sender_id": sender_id,
+            "receiver_id": receiver_id
+        })
+        row = result.fetchone()
+        if not row:
+            emit('error', {'message': 'Mesaj gönderilemedi.'}, room=sender_id)
+            return
 
-    emit('receive_message', {
-        'id': new_message.id,
-        'from': sender_id,
-        'message': message
-    }, room=receiver_id)
+        # Bildirimi çek (en son eklenen notification)
+        sql_get_notification = text("""
+            SELECT TOP 1 id, notification_type, content, is_read, created_at
+            FROM notifications
+            WHERE user_id = :receiver_id
+            ORDER BY id DESC;
+        """)
+        notif_result = db.session.execute(sql_get_notification, {
+            "receiver_id": receiver_id
+        })
+        notif_row = notif_result.fetchone()
 
-    emit('receive_message', {
-        'id': new_message.id,
-        'from': sender_id,
-        'message': message
-    }, room=sender_id)
+        # Mesajı gönder
+        emit('receive_message', {
+            'id': row.id,
+            'from': sender_id,
+            'message': message
+        }, room=receiver_id)
+
+        emit('receive_message', {
+            'id': row.id,
+            'from': sender_id,
+            'message': message
+        }, room=sender_id)
+
+        # Bildirimi anlık olarak gönder
+        if notif_row:
+            emit('receive_notification', {
+                'id': notif_row.id,
+                'type': notif_row.notification_type,
+                'content': notif_row.content,
+                'is_read': notif_row.is_read,
+                'created_at': str(notif_row.created_at)
+            }, room=receiver_id)
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Mesaj gönderilirken hata: {str(e)}")
+        emit('error', {'message': 'Mesaj gönderilirken hata oluştu.'}, room=sender_id)
 
 def send_friend_request(to_user_id, from_user_id, from_username, friendship_id):
     print(f"Arkadaşlık isteği gönderiliyor: {from_user_id} -> {to_user_id}, friendship_id: {friendship_id}")
@@ -227,28 +274,59 @@ def send_friend_request_accepted(user_id, friend_id, friend_username):
 
 @socketio.on('get_notifications')
 def handle_get_notifications(data):
-    user_id = str(data.get('user_id'))
+    user_id = data.get('user_id')
+    if not user_id:
+        return
+
+    try:
+        # Okunmamış bildirim sayısını al
+        sql = text("""
+            SELECT COUNT(*) as count 
+            FROM notifications 
+            WHERE user_id = :user_id AND is_read = 0
+        """)
+        result = db.session.execute(sql, {"user_id": user_id}).fetchone()
+        count = result.count if result else 0
+
+        # Kullanıcıya bildirim sayısını gönder
+        emit('notification_count', {'count': count}, room=str(user_id))
+    except Exception as e:
+        print(f"Bildirim sayısı alınırken hata: {str(e)}")
+
+@socketio.on('notification_read')
+def handle_notification_read(data):
+    notification_id = data.get('notification_id')
+    user_id = data.get('user_id')
     
-    # Okunmamış bildirimleri getir
-    sql_notifications = text("""
-        SELECT * FROM notifications 
-        WHERE user_id = :user_id AND is_read = 0 
-        ORDER BY created_at DESC
-    """)
-    notifications = db.session.execute(sql_notifications, {"user_id": user_id}).fetchall()
-    
-    notification_list = []
-    for notification in notifications:
-        notification_list.append({
-            'id': notification.id,
-            'type': notification.type,
-            'content': notification.content,
-            'created_at': notification.created_at.isoformat() if notification.created_at else None
+    if not notification_id or not user_id:
+        return
+
+    try:
+        # Bildirimi okundu olarak işaretle
+        sql = text("""
+            UPDATE notifications 
+            SET is_read = 1 
+            WHERE id = :notification_id AND user_id = :user_id
+        """)
+        db.session.execute(sql, {
+            "notification_id": notification_id,
+            "user_id": user_id
         })
-    
-    emit('notifications', {
-        'notifications': notification_list
-    }, room=user_id)
+        db.session.commit()
+
+        # Güncel bildirim sayısını al ve gönder
+        sql_count = text("""
+            SELECT COUNT(*) as count 
+            FROM notifications 
+            WHERE user_id = :user_id AND is_read = 0
+        """)
+        result = db.session.execute(sql_count, {"user_id": user_id}).fetchone()
+        count = result.count if result else 0
+
+        emit('notification_count', {'count': count}, room=str(user_id))
+    except Exception as e:
+        print(f"Bildirim okundu olarak işaretlenirken hata: {str(e)}")
+        db.session.rollback()
 
 @socketio.on('mark_notification_read')
 def handle_mark_notification_read(data):

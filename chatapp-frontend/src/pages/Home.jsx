@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import Friends from '../components/Friends';
 import Layout from '../components/Layout';
+import NotificationList from '../components/NotificationList';
 import axios from 'axios';
 
 const Home = () => {
@@ -15,6 +16,7 @@ const Home = () => {
   const username = localStorage.getItem("username");
   const [title, setTitle] = useState('Chat App');
   const [activeChats, setActiveChats] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -75,6 +77,17 @@ const Home = () => {
     setTitle(newTitle);
   }, [selectedMenu, username]);
 
+  useEffect(() => {
+    const handleOpenNotifications = () => {
+      setShowNotifications(true);
+    };
+
+    window.addEventListener('openNotifications', handleOpenNotifications);
+    return () => {
+      window.removeEventListener('openNotifications', handleOpenNotifications);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.clear();
     window.location.reload();
@@ -122,6 +135,57 @@ const Home = () => {
             <ChatWindow friend={selectedFriend} />
           )}
         </div>
+
+        {/* Bildirimler Modalı */}
+        {showNotifications && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#252525',
+              borderRadius: '10px',
+              padding: '20px',
+              width: '400px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              position: 'relative'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px',
+                borderBottom: '1px solid #333',
+                paddingBottom: '10px'
+              }}>
+                <h3 style={{ color: '#fff', margin: 0 }}>Bildirimler</h3>
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#fff',
+                    fontSize: '20px',
+                    cursor: 'pointer',
+                    padding: '5px'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <NotificationList userId={userId} onClose={() => setShowNotifications(false)} />
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

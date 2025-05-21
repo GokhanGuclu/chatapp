@@ -3,7 +3,6 @@ from flask_socketio import emit, join_room, leave_room
 from app import socketio, db
 from app.models.message_model import Message
 from flask import jsonify
-from sqlalchemy import text
 
 class MessageController:
 
@@ -20,31 +19,6 @@ class MessageController:
         user_id = data.get('user_id')
         leave_room(str(user_id))
         emit('status', {'message': f'User {user_id} left room.'}, room=str(user_id))
-
-    @socketio.on('send_message')
-    @staticmethod
-    def handle_send_message(data):
-        sender_id = data.get('sender_id')
-        receiver_id = data.get('receiver_id')
-        content = data.get('content')
-
-        if not sender_id or not receiver_id or not content:
-            emit('error', {'error': 'Eksik bilgi'}, room=str(sender_id))
-            return
-
-        message = Message.send_message(sender_id, receiver_id, content)
-
-        message_data = {
-            'id': message.id,
-            'sender_id': sender_id,
-            'receiver_id': receiver_id,
-            'content': content,
-            'sent_at': str(message.sent_at)
-        }
-
-        emit('receive_message', message_data, room=str(sender_id))
-        
-        emit('receive_message', message_data, room=str(receiver_id))
 
     @staticmethod
     def get_message_history(user_id, friend_id):

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import NotificationList from './NotificationList';
 
 // Socket bağlantısını component dışında oluştur
 const socket = io("http://localhost:5000", {
@@ -26,6 +27,7 @@ const Sidebar = ({ user, onLogout, onSelectMenu, onSelectFriend, activeChats }) 
 
   const [closingChatIds, setClosingChatIds] = useState([]);
   const [visibleChats, setVisibleChats] = useState(activeChats);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -92,6 +94,12 @@ const Sidebar = ({ user, onLogout, onSelectMenu, onSelectFriend, activeChats }) 
     }
   };
 
+  const handleNotificationClick = () => {
+    // Custom event tetikle
+    const event = new CustomEvent('openNotifications');
+    window.dispatchEvent(event);
+  };
+
   return (
     <div style={{
       width: '250px',
@@ -115,11 +123,13 @@ const Sidebar = ({ user, onLogout, onSelectMenu, onSelectFriend, activeChats }) 
           👤 {user.username}
         </h3>
 
-        {/* Arkadaşlar butonu */}
-        <div style={{ position: 'relative', marginBottom: '20px' }}>
+        {/* Butonlar container */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          {/* Arkadaşlar butonu */}
           <div 
             onClick={() => onSelectMenu('friends')}
             style={{
+              flex: 1,
               padding: '12px',
               backgroundColor: '#252525',
               borderRadius: '6px',
@@ -134,8 +144,33 @@ const Sidebar = ({ user, onLogout, onSelectMenu, onSelectFriend, activeChats }) 
             }}
           >
             Arkadaşlar
+          </div>
+
+          {/* Bildirimler butonu */}
+          <div 
+            onClick={handleNotificationClick}
+            style={{
+              padding: '12px',
+              backgroundColor: '#252525',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              color: '#ccc',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              position: 'relative',
+              minWidth: '45px'
+            }}
+          >
+            🔔
             {notificationCount > 0 && (
               <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
                 backgroundColor: '#ff4444',
                 color: 'white',
                 borderRadius: '50%',
@@ -324,6 +359,57 @@ const Sidebar = ({ user, onLogout, onSelectMenu, onSelectFriend, activeChats }) 
           </button>
         </div>
       </div>
+
+      {/* Bildirimler Modalı */}
+      {showNotifications && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#252525',
+            borderRadius: '10px',
+            padding: '20px',
+            width: '400px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            position: 'relative'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px',
+              borderBottom: '1px solid #333',
+              paddingBottom: '10px'
+            }}>
+              <h3 style={{ color: '#fff', margin: 0 }}>Bildirimler</h3>
+              <button
+                onClick={() => setShowNotifications(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  padding: '5px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <NotificationList userId={user.id} onClose={() => setShowNotifications(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
