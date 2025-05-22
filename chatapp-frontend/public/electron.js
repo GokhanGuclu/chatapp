@@ -1,16 +1,24 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
+let isDev = false;
+try {
+  isDev = require('electron-is-dev');
+} catch (e) {
+  isDev = false;
+}
+const { autoUpdater } = require('electron-updater');
+
+let mainWindow;
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     frame: false,
     backgroundColor: '#1a1a1a',
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: true,
+      contextIsolation: false,
       enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js')
     }
@@ -19,8 +27,13 @@ function createWindow() {
   mainWindow.loadURL(
     isDev
       ? 'http://localhost:3000'
-      : `file://${path.join(__dirname, '../build/index.html')}`
+      : `file://${path.join(__dirname, 'index.html')}`
   );
+
+  // Geliştirici araçlarını aç (geliştirme modunda)
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   // Pencere kontrolü için event listener'lar
   ipcMain.on('window-minimize', () => {
@@ -59,11 +72,16 @@ function createWindow() {
     
     mainWindow.setTitle(title);
   });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   createWindow();
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on('window-all-closed', () => {
@@ -73,7 +91,20 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+  if (mainWindow === null) {
     createWindow();
   }
+});
+
+// Güncelleme olayları
+autoUpdater.on('update-available', () => {
+  mainWindow.webContents.send('update_available');
+});
+
+autoUpdater.on('update-downloaded', () => {
+  mainWindow.webContents.send('update_downloaded');
+});
+
+ipcMain.on('restart_app', () => {
+  autoUpdater.quitAndInstall();
 }); 

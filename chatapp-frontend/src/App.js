@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
+import UpdateNotification from './components/UpdateNotification';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -40,16 +41,19 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home user={user} onLogout={() => {
-          localStorage.removeItem("user");
-          setUser(null);
-        }} />} />
-        <Route path="/settings" element={<Settings user={user} />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <>
+      <UpdateNotification />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home user={user} onLogout={() => {
+            localStorage.removeItem("user");
+            setUser(null);
+          }} />} />
+          <Route path="/settings" element={<Settings user={user} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </>
   );
 }
 
