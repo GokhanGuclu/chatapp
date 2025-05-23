@@ -532,6 +532,7 @@ Bu projeye katkıda bulunmak isterseniz, aşağıdaki adımları izleyebilirsini
    - Başlık açıklayıcı olsun
    - Yapılan değişiklikleri detaylı açıklayın
    - Varsa ilgili issue'ları belirtin
+   - Ekran görüntüleri veya test sonuçları ekleyin
 
 ## 📄 Lisans
 Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
