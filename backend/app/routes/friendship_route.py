@@ -3,11 +3,6 @@ from app.controllers.friendship_controller import FriendshipController
 
 friendship_bp = Blueprint('friendship', __name__, url_prefix='/friendship')
 
-@friendship_bp.route('/add', methods=['POST'])
-def add_friend():
-    return FriendshipController.add_friend()
-
-
 @friendship_bp.route('/accept', methods=['POST'])
 def accept_friend():
     return FriendshipController.accept_friend()

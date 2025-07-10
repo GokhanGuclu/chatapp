@@ -96,8 +96,7 @@ class User(db.Model):
             SELECT profile_picture FROM users WHERE id = :user_id
         """)
         profile_picture = db.session.execute(sql_get_profile_picture, {"user_id": user_id}).fetchone()
-
-        return text(profile_picture)
+        return profile_picture
             
     @staticmethod
     def update_profile_picture(user_id, profile_picture):

@@ -4,7 +4,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
-import UpdateNotification from './components/UpdateNotification';
+import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -19,30 +19,28 @@ function App() {
 
   if (!user) {
     return (
-      <Router>
-        <Routes>
-          <Route path="/" element={
-            showRegister ? (
-              <Register onSwitchToLogin={() => setShowRegister(false)} />
-            ) : (
-              <Login 
-                onLogin={(userData) => {
-                  localStorage.setItem("user", JSON.stringify(userData));
-                  setUser(userData);
-                }} 
-                onSwitchToRegister={() => setShowRegister(true)} 
-              />
-            )
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+        <Router>
+          <Routes>
+            <Route path="/" element={
+              showRegister ? (
+                <Register onSwitchToLogin={() => setShowRegister(false)} />
+              ) : (
+                <Login 
+                  onLogin={(userData) => {
+                    localStorage.setItem("user", JSON.stringify(userData));
+                    setUser(userData);
+                  }} 
+                  onSwitchToRegister={() => setShowRegister(true)} 
+                />
+              )
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
     );
   }
 
   return (
-    <>
-      <UpdateNotification />
       <Router>
         <Routes>
           <Route path="/" element={<Home user={user} onLogout={() => {
@@ -53,7 +51,6 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
-    </>
   );
 }
 

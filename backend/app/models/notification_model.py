@@ -20,6 +20,22 @@ class Notification(db.Model):
     @staticmethod
     def get_notifications(user_id):
         """Kullanıcının bildirimlerini getir"""
+        sql_check = text("""
+            SELECT receive_friend_notifications, receive_message_notifications 
+            FROM notification_settings 
+            WHERE user_id = :user_id
+        """)
+
+        settings = db.session.execute(sql_check, {"user_id": user_id}).fetchone()
+        
+        # Varsayılan olarak tüm bildirimleri göster
+        friend_notifications_enabled = True
+        message_notifications_enabled = True
+        
+        if settings:
+            friend_notifications_enabled = settings.receive_friend_notifications
+            message_notifications_enabled = settings.receive_message_notifications
+
         sql = text("""
             SELECT 
                 n.id,
@@ -35,10 +51,19 @@ class Notification(db.Model):
             FROM notifications n
             LEFT JOIN users u ON n.sender_id = u.id
             WHERE n.user_id = :user_id
+            AND (
+                (:friend_notifications_enabled = 1 AND n.notification_type IN ('friend_request', 'friend_accept'))
+                OR (:message_notifications_enabled = 1 AND n.notification_type = 'message')
+                OR n.notification_type NOT IN ('friend_request', 'friend_accept', 'message')
+            )
             ORDER BY n.created_at DESC
         """)
         try:
-            notifications = db.session.execute(sql, {"user_id": user_id}).fetchall()
+            notifications = db.session.execute(sql, {
+                "user_id": user_id,
+                "friend_notifications_enabled": friend_notifications_enabled,
+                "message_notifications_enabled": message_notifications_enabled
+            }).fetchall()
             return [dict(row._mapping) for row in notifications]
         except Exception as e:
             print(f"Bildirimler getirilirken hata: {str(e)}")

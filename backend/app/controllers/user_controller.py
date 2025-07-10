@@ -38,7 +38,6 @@ class UserController:
         if not user:
             return jsonify({'error': 'Geçersiz email veya şifre.'}), 401
 
-        #User.update_last_seen(user.id)
 
         return jsonify({'message': 'Giriş başarılı.', 'username': user.username, 'user_id': user.id}), 200
 
@@ -88,8 +87,9 @@ class UserController:
             filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
             file_path = os.path.join(current_app.root_path, '..', 'pp', filename)
 
-            sql_get_old = User.get_profile_picture
-            old_picture = db.session.execute(sql_get_old, {"user_id": user_id}).scalar()
+            sql_get_old = User.get_profile_picture(user_id)
+            result = db.session.execute(sql_get_old, {"user_id": user_id}).scalar()
+            old_picture = result if result else 'default_avatar.png'
 
             if old_picture and old_picture != 'default_avatar.png':
                 old_path = os.path.join(current_app.root_path, '..', 'pp', old_picture)

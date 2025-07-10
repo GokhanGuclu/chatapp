@@ -13,7 +13,7 @@ def login():
 
 @user_bp.route('/get_by_username/<string:username>', methods=['GET'])
 def get_by_username(username):
-    return UserController.get_by_username(username)
+    return UserController.get_user_by_username(username)
 
 @user_bp.route('/get_profile/<int:user_id>', methods=['GET'])
 def get_profile_by_id(user_id):

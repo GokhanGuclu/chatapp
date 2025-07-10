@@ -15,7 +15,7 @@ const socket = io("http://localhost:5000", {
   withCredentials: true
 });
 
-const Friends = ({ onSelectFriend }) => {
+const Friends = ({ onSelectFriend, selectedMenu }) => {
   const [friends, setFriends] = useState([]);
   const [friendProfiles, setFriendProfiles] = useState({});
   const [newFriendUsername, setNewFriendUsername] = useState("");
@@ -33,6 +33,14 @@ const Friends = ({ onSelectFriend }) => {
   const updateTimeoutRef = useRef(null);
 
   const userId = localStorage.getItem("userId");
+
+  // selectedMenu değiştiğinde arkadaş listesini yeniden çek
+  useEffect(() => {
+    if (selectedMenu === 'friends') {
+      console.log("Arkadaşlar menüsüne geçildi, liste yenileniyor...");
+      forceUpdateFriendsList();
+    }
+  }, [selectedMenu]);
 
   const fetchFriendsStatus = useCallback(() => {
     axios.get(`http://localhost:5000/user/get_friends_status/${userId}`)
@@ -169,7 +177,6 @@ const Friends = ({ onSelectFriend }) => {
         console.log("Arkadaşlık isteği alındı event'i tetiklendi:", data);
         console.log("Mevcut istekler:", requests);
         if (data.to_user_id === userId) {
-          // Friendship ID kontrolü ve dönüşümü
           const friendshipId = parseInt(data.friendship_id);
           if (!friendshipId || isNaN(friendshipId)) {
             console.error("Geçersiz friendship_id:", data.friendship_id);
@@ -178,7 +185,6 @@ const Friends = ({ onSelectFriend }) => {
           
           setRequests(prev => {
             console.log("Önceki istekler:", prev);
-            // Eğer aynı istek zaten varsa ekleme
             if (prev.some(req => req.friendship_id === friendshipId)) {
               console.log("Bu istek zaten mevcut, eklenmeyecek");
               return prev;
@@ -195,9 +201,6 @@ const Friends = ({ onSelectFriend }) => {
             console.log("Yeni istekler listesi:", newRequests);
             return newRequests;
           });
-
-          // Bildirim sayısını artır
-          setUnreadNotifications(prev => prev + 1);
         }
       });
 
@@ -205,7 +208,6 @@ const Friends = ({ onSelectFriend }) => {
         console.log("Arkadaşlık isteği gönderildi event'i tetiklendi:", data);
         console.log("Mevcut gönderilen istekler:", sentRequests);
         if (data.from_user_id === userId) {
-          // Friendship ID kontrolü ve dönüşümü
           const friendshipId = parseInt(data.friendship_id);
           if (!friendshipId || isNaN(friendshipId)) {
             console.error("Geçersiz friendship_id:", data.friendship_id);
@@ -214,7 +216,6 @@ const Friends = ({ onSelectFriend }) => {
           
           setSentRequests(prev => {
             console.log("Önceki gönderilen istekler:", prev);
-            // Eğer aynı istek zaten varsa ekleme
             if (prev.some(req => req.friendship_id === friendshipId)) {
               console.log("Bu gönderilen istek zaten mevcut, eklenmeyecek");
               return prev;
@@ -237,11 +238,9 @@ const Friends = ({ onSelectFriend }) => {
       socket.on("friend_request_handled", (data) => {
         console.log("Arkadaşlık isteği işlendi:", data);
         if (data.status === "accepted" || data.status === "rejected") {
-          // İstek listelerini güncelle
           setRequests(prev => prev.filter(req => req.friendship_id !== data.friendship_id));
           setSentRequests(prev => prev.filter(req => req.friendship_id !== data.friendship_id));
           
-          // Eğer kabul edildiyse arkadaş listesini güncelle
           if (data.status === "accepted") {
             forceUpdateFriendsList();
           }
@@ -253,7 +252,6 @@ const Friends = ({ onSelectFriend }) => {
         if (data.status === "accepted") {
           forceUpdateFriendsList();
           
-          // İstek listelerini temizle
           setRequests(prev => prev.filter(req => 
             req.user_id !== data.friend_id && req.user_id !== data.user_id
           ));
@@ -306,7 +304,6 @@ const Friends = ({ onSelectFriend }) => {
       socket.off("friend_request_cancelled");
       socket.off("friend_request_handled");
       socket.off("user_status_change");
-      socket.off("notification_count");
       socket.off("connect");
       socket.off("connect_error");
       socket.off("disconnect");
@@ -352,15 +349,12 @@ const Friends = ({ onSelectFriend }) => {
         const friendId = response.data.id;
         console.log("Kullanıcı bulundu, arkadaşlık isteği gönderiliyor:", friendId);
         
-        return axios.post('http://localhost:5000/friendship/add', {
+        // Socket event'i ile arkadaşlık isteği gönder
+        socket.emit('send_friend_request', {
           user_id: userId,
           friend_id: friendId
         });
-      })
-      .then(response => {
-        console.log("Arkadaşlık isteği başarıyla gönderildi:", response.data);
         
-        // Socket event'lerini bekleyeceğiz, manuel state güncellemesi yapmıyoruz
         setMessage("Arkadaşlık isteği gönderildi.");
         setNewFriendUsername("");
       })
@@ -385,16 +379,10 @@ const Friends = ({ onSelectFriend }) => {
       console.log("İstek reddedildi:", response.data);
 
       // Bildirimi okundu olarak işaretle
-      const notificationResponse = await axios.post("http://localhost:5000/notification/mark_read", {
-        friendship_id: friendshipId,
+      socket.emit("mark_notification_read", {
+        notification_id: response.data.notification_id,
         user_id: userId
       });
-      console.log("Bildirim okundu olarak işaretlendi:", notificationResponse.data);
-      
-      // Bildirim sayısını güncelle
-      if (notificationResponse.data.unread_count !== undefined) {
-        setUnreadNotifications(notificationResponse.data.unread_count);
-      }
 
       // İstek listesini güncelle
       setRequests(prev => prev.filter(req => req.friendship_id !== friendshipId));
@@ -420,16 +408,10 @@ const Friends = ({ onSelectFriend }) => {
       console.log("İstek kabul edildi:", response.data);
 
       // Bildirimi okundu olarak işaretle
-      const notificationResponse = await axios.post("http://localhost:5000/notification/mark_read", {
-        friendship_id: friendshipId,
+      socket.emit("mark_notification_read", {
+        notification_id: response.data.notification_id,
         user_id: userId
       });
-      console.log("Bildirim okundu olarak işaretlendi:", notificationResponse.data);
-      
-      // Bildirim sayısını güncelle
-      if (notificationResponse.data.unread_count !== undefined) {
-        setUnreadNotifications(notificationResponse.data.unread_count);
-      }
 
       // İstek listesini güncelle
       setRequests(prev => prev.filter(req => req.friendship_id !== friendshipId));
@@ -758,7 +740,7 @@ const Friends = ({ onSelectFriend }) => {
             border: 'none', 
             borderRadius: "6px", 
             marginLeft: "10px",
-            position: 'relative' // Bildirim badge'i için
+            position: 'relative'
           }}
         >
           İstekler

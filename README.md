@@ -1,349 +1,349 @@
-# ChatApp - Gerçek Zamanlı Mesajlaşma Uygulaması
+# ChatApp - Real-Time Messaging Application
 
-Modern ve kullanıcı dostu bir gerçek zamanlı mesajlaşma uygulaması. Electron tabanlı masaüstü uygulaması ve web arayüzü desteği ile hem masaüstünde hem de tarayıcıda kullanılabilir.
+A modern and user-friendly real-time messaging application. Available as both an Electron-based desktop application and web interface, usable on both desktop and browser.
 
-## 🚀 Özellikler
+## 🚀 Features
 
-### Genel Özellikler
-- Gerçek zamanlı mesajlaşma
-- Kullanıcı dostu arayüz
-- Masaüstü uygulaması (Electron) ve web desteği
-- Özel pencere kontrolü (minimize, maximize, close)
-- Responsive tasarım
-- Gerçek zamanlı bildirim sistemi
+### General Features
+- Real-time messaging
+- User-friendly interface
+- Desktop application (Electron) and web support
+- Custom window controls (minimize, maximize, close)
+- Responsive design
+- Real-time notification system
 
-### Mesajlaşma Özellikleri
-- Birebir mesajlaşma
-- Mesaj geçmişi
-- Mesaj silme
-- Sohbet silme
-- Çevrimiçi/çevrimdışı durumu
-- Son görülme zamanı
-- Okundu bilgisi
-- Mesaj bildirimleri
+### Messaging Features
+- One-on-one messaging
+- Message history
+- Message deletion
+- Chat deletion
+- Online/offline status
+- Last seen timestamp
+- Read receipts
+- Message notifications
 
-### Kullanıcı Özellikleri
-- Kullanıcı kaydı ve girişi
-- Arkadaş ekleme/silme
-- Arkadaş listesi
-- Profil ayarları
-- Profil resmi desteği
-- Arkadaşlık isteği bildirimleri
-- Bildirim yönetimi (okundu/okunmadı)
-- Bildirim geçmişi
+### User Features
+- User registration and login
+- Add/remove friends
+- Friends list
+- Profile settings
+- Profile picture support
+- Friend request notifications
+- Notification management (read/unread)
+- Notification history
 
-### Bildirim Sistemi
-- Gerçek zamanlı bildirimler
-- Farklı bildirim türleri (mesaj, arkadaşlık isteği)
-- Bildirim sayacı
-- Bildirim okundu/okunmadı durumu
-- Bildirim geçmişi görüntüleme
-- Tüm bildirimleri okundu olarak işaretleme
-- Bildirim detayları (gönderen, zaman, içerik)
+### Notification System
+- Real-time notifications
+- Different notification types (message, friend request)
+- Notification counter
+- Notification read/unread status
+- View notification history
+- Mark all notifications as read
+- Notification details (sender, time, content)
 
-## 🛠️ Teknolojiler
+## 🛠️ Technologies
 
 ### Backend
 - Python 3.x
 - Flask (Web Framework)
-- Flask-SocketIO (Gerçek zamanlı iletişim)
+- Flask-SocketIO (Real-time communication)
 - SQLAlchemy (ORM)
-- SQL Server (Veritabanı)
-- Flask-CORS (CORS desteği)
+- SQL Server (Database)
+- Flask-CORS (CORS support)
 - T-SQL Stored Procedures
-- WebSocket desteği
+- WebSocket support
 
 ### Frontend
 - React.js
-- React Router (Sayfa yönlendirme)
-- Socket.IO Client (Gerçek zamanlı iletişim)
-- Electron (Masaüstü uygulaması)
+- React Router (Page routing)
+- Socket.IO Client (Real-time communication)
+- Electron (Desktop application)
 - React Icons
-- React Hot Toast (Bildirimler)
+- React Hot Toast (Notifications)
 
-## 📦 Proje Kurulumu
+## 📦 Project Setup
 
-### 1. Gereksinimler
-- **Sistem Gereksinimleri**
-  - Windows 10 veya üzeri
-  - En az 4GB RAM
-  - 1GB boş disk alanı
-  - İnternet bağlantısı
+### 1. Requirements
+- **System Requirements**
+  - Windows 10 or higher
+  - At least 4GB RAM
+  - 1GB free disk space
+  - Internet connection
 
-- **Yazılım Gereksinimleri**
-  - Git (v2.x veya üzeri)
+- **Software Requirements**
+  - Git (v2.x or higher)
   - Python 3.x
-  - Node.js (v16 veya üzeri)
-  - npm (Node.js ile birlikte gelir)
-  - SQL Server (2019 veya üzeri)
-  - Visual Studio Code (önerilen)
+  - Node.js (v16 or higher)
+  - npm (comes with Node.js)
+  - SQL Server (2019 or higher)
+  - Visual Studio Code (recommended)
 
-### 2. Projeyi İndirme
+### 2. Download Project
 ```bash
-# Projeyi klonlayın
+# Clone the project
 git clone https://github.com/GokhanGuclu/chatapp.git
 
-# Proje klasörüne girin
+# Navigate to project directory
 cd chatapp
 ```
 
-### 3. Backend Kurulumu
-1. **Backend Klasörüne Geçiş**
+### 3. Backend Setup
+1. **Navigate to Backend Directory**
    ```bash
    cd backend
    ```
 
-2. **Python Sanal Ortam Oluşturma**
+2. **Create Python Virtual Environment**
    ```bash
-   # Windows için
+   # For Windows
    python -m venv venv
    venv\Scripts\activate
 
-   # Linux/Mac için
+   # For Linux/Mac
    python3 -m venv venv
    source venv/bin/activate
    ```
 
-3. **Bağımlılıkları Yükleme**
+3. **Install Dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Veritabanı Kurulumu**
-   - SQL Server'ın çalıştığından emin olun
-   - Veritabanı bağlantı bilgilerini `config.py` dosyasında kontrol edin
-   - Gerekirse `.env` dosyası oluşturun
+4. **Database Setup**
+   - Ensure SQL Server is running
+   - Check database connection information in `config.py`
+   - Create `.env` file if needed
 
-5. **Backend'i Başlatma**
+5. **Start Backend**
    ```bash
    python run.py
-   # Sunucu http://localhost:5000 adresinde çalışacak
+   # Server will run at http://localhost:5000
    ```
 
-### 4. Frontend Kurulumu
-1. **Frontend Klasörüne Geçiş**
+### 4. Frontend Setup
+1. **Navigate to Frontend Directory**
    ```bash
    cd ../chatapp-frontend
    ```
 
-2. **Bağımlılıkları Yükleme**
+2. **Install Dependencies**
    ```bash
    npm install
    ```
 
-3. **Geliştirme Modunda Çalıştırma**
+3. **Run in Development Mode**
    ```bash
-   # Web uygulaması olarak çalıştırma
+   # Run as web application
    npm start
-   # http://localhost:3000 adresinde açılacak
+   # Will open at http://localhost:3000
 
-   # Electron uygulaması olarak çalıştırma
+   # Run as Electron application
    npm run electron-dev
    ```
 
-4. **Üretim Sürümü Oluşturma**
+4. **Build Production Version**
    ```bash
-   # Web uygulaması için
+   # For web application
    npm run build
 
-   # Electron uygulaması için
+   # For Electron application
    npm run electron-pack
    ```
 
-### 5. Proje Yapısı
+### 5. Project Structure
 ```
 chatapp/
-├── backend/                 # Backend uygulaması
-│   ├── app/                # Uygulama kodları
-│   │   ├── models/        # Veritabanı modelleri
-│   │   ├── routes/        # API rotaları
-│   │   ├── controllers/   # İş mantığı
-│   │   └── socket.py      # WebSocket işlemleri
-│   ├── config.py          # Yapılandırma
-│   ├── requirements.txt   # Python bağımlılıkları
-│   └── run.py            # Başlatma dosyası
+├── backend/                 # Backend application
+│   ├── app/                # Application code
+│   │   ├── models/        # Database models
+│   │   ├── routes/        # API routes
+│   │   ├── controllers/   # Business logic
+│   │   └── socket.py      # WebSocket operations
+│   ├── config.py          # Configuration
+│   ├── requirements.txt   # Python dependencies
+│   └── run.py            # Startup file
 │
-├── chatapp-frontend/       # Frontend uygulaması
-│   ├── public/            # Statik dosyalar
-│   │   ├── electron.js    # Electron ana süreç
-│   │   └── preload.js     # Electron önyükleme
-│   ├── src/              # Kaynak kodlar
-│   │   ├── components/   # React bileşenleri
-│   │   ├── pages/       # Sayfa bileşenleri
-│   │   ├── context/     # React context'leri
-│   │   └── utils/       # Yardımcı fonksiyonlar
-│   └── package.json     # Node.js bağımlılıkları
+├── chatapp-frontend/       # Frontend application
+│   ├── public/            # Static files
+│   │   ├── electron.js    # Electron main process
+│   │   └── preload.js     # Electron preload
+│   ├── src/              # Source code
+│   │   ├── components/   # React components
+│   │   ├── pages/       # Page components
+│   │   ├── context/     # React contexts
+│   │   └── utils/       # Utility functions
+│   └── package.json     # Node.js dependencies
 │
-└── README.md             # Proje dokümantasyonu
+└── README.md             # Project documentation
 ```
 
-### 6. Geliştirme Ortamı
-- **Backend Geliştirme**
-  - Python IDE (VS Code önerilen)
+### 6. Development Environment
+- **Backend Development**
+  - Python IDE (VS Code recommended)
   - SQL Server Management Studio
-  - Postman (API testi için)
+  - Postman (for API testing)
 
-- **Frontend Geliştirme**
-  - VS Code eklentileri:
+- **Frontend Development**
+  - VS Code extensions:
     - ESLint
     - Prettier
     - React Developer Tools
     - Redux DevTools
 
-### 7. Sık Karşılaşılan Sorunlar ve Çözümleri
+### 7. Common Issues and Solutions
 
-#### Backend Sorunları
-- **Veritabanı Bağlantı Hatası**
-  - SQL Server servisinin çalıştığından emin olun
-  - Bağlantı bilgilerini kontrol edin
-  - Firewall ayarlarını kontrol edin
+#### Backend Issues
+- **Database Connection Error**
+  - Ensure SQL Server service is running
+  - Check connection information
+  - Check firewall settings
 
-- **Port Çakışması**
-  - 5000 portu kullanımdaysa:
+- **Port Conflict**
+  - If port 5000 is in use:
     ```bash
     set FLASK_RUN_PORT=5001
     python run.py
     ```
 
-#### Frontend Sorunları
-- **Node Modülleri Hatası**
+#### Frontend Issues
+- **Node Modules Error**
   ```bash
   rm -rf node_modules
   npm install
   ```
 
-- **Port Çakışması**
+- **Port Conflict**
   ```bash
-  # 3000 portu kullanımdaysa
+  # If port 3000 is in use
   set PORT=3001 && npm start
   ```
 
-- **Electron Build Hatası**
+- **Electron Build Error**
   ```bash
   npm run build
   npm run electron-pack
   ```
 
-#### Bildirim Sistemi Sorunları
-- **Bildirimler Görünmüyor**
-  - WebSocket bağlantısını kontrol edin
-  - Kullanıcı oturumunun aktif olduğundan emin olun
-  - Tarayıcı konsolunda hata mesajlarını kontrol edin
+#### Notification System Issues
+- **Notifications Not Showing**
+  - Check WebSocket connection
+  - Ensure user session is active
+  - Check error messages in browser console
 
-- **Bildirim Sayacı Güncellenmiyor**
-  - Socket.IO bağlantısını yeniden başlatın
-  - Sayfayı yenileyin
-  - Kullanıcı oturumunu kapatıp tekrar açın
+- **Notification Counter Not Updating**
+  - Restart Socket.IO connection
+  - Refresh the page
+  - Log out and log back in
 
-- **Bildirimler Okundu Olarak İşaretlenmiyor**
-  - Veritabanı bağlantısını kontrol edin
-  - API endpoint'lerinin doğru çalıştığından emin olun
-  - Kullanıcı yetkilerini kontrol edin
+- **Notifications Not Marked as Read**
+  - Check database connection
+  - Ensure API endpoints are working correctly
+  - Check user permissions
 
-### 8. Test ve Doğrulama
-1. **Backend Testi**
+### 8. Testing and Validation
+1. **Backend Testing**
    ```bash
    cd backend
    python -m pytest
    ```
 
-2. **Frontend Testi**
+2. **Frontend Testing**
    ```bash
    cd chatapp-frontend
    npm test
    ```
 
-3. **Manuel Test**
-   - Backend API'lerini Postman ile test edin
-   - Web uygulamasını farklı tarayıcılarda test edin
-   - Electron uygulamasını test edin
+3. **Manual Testing**
+   - Test backend APIs with Postman
+   - Test web application in different browsers
+   - Test Electron application
 
-### 9. Deployment (Dağıtım)
+### 9. Deployment
 1. **Backend Deployment**
-   - Python sanal ortamı oluşturun
-   - Bağımlılıkları yükleyin
-   - Gunicorn veya uWSGI ile sunucu başlatın
-   - Nginx veya Apache ile reverse proxy yapılandırın
+   - Create Python virtual environment
+   - Install dependencies
+   - Start server with Gunicorn or uWSGI
+   - Configure reverse proxy with Nginx or Apache
 
 2. **Frontend Deployment**
-   - Web uygulaması için:
+   - For web application:
      ```bash
      npm run build
-     # build klasörünü web sunucusuna yükleyin
+     # Upload build folder to web server
      ```
-   - Electron uygulaması için:
+   - For Electron application:
      ```bash
      npm run electron-pack
-     # dist klasöründeki kurulum dosyasını dağıtın
+     # Distribute installation file from dist folder
      ```
 
-## 🚀 Kullanım
+## 🚀 Usage
 
-### Web Uygulaması
-1. Backend'i başlatın (`python run.py`)
-2. Frontend'i başlatın (`npm start`)
-3. Tarayıcıda `http://localhost:3000` adresine gidin
+### Web Application
+1. Start backend (`python run.py`)
+2. Start frontend (`npm start`)
+3. Go to `http://localhost:3000` in browser
 
-### Masaüstü Uygulaması
-1. Backend'i başlatın (`python run.py`)
-2. Masaüstü uygulamasını başlatın:
+### Desktop Application
+1. Start backend (`python run.py`)
+2. Start desktop application:
    ```bash
    npm run electron-dev
    ```
 
 ## 📝 API Endpoints
 
-### Kullanıcı İşlemleri (`/user`)
-- `POST /user/register` - Yeni kullanıcı kaydı
-- `POST /user/login` - Kullanıcı girişi
-- `GET /user/get_by_username/<username>` - Kullanıcı adına göre kullanıcı bilgisi
-- `GET /user/get_profile/<user_id>` - Kullanıcı profili
-- `PUT /user/update_status/<user_id>` - Kullanıcı durumunu güncelleme (çevrimiçi/çevrimdışı)
-- `PUT /user/update_last_seen/<user_id>` - Son görülme zamanını güncelleme
-- `PUT /user/toggle_last_seen/<user_id>` - Son görülme özelliğini açma/kapama
-- `GET /user/get_user_status/<user_id>` - Kullanıcı durumu bilgisi
-- `GET /user/get_friends_status/<user_id>` - Arkadaşların durum bilgileri
+### User Operations (`/user`)
+- `POST /user/register` - New user registration
+- `POST /user/login` - User login
+- `GET /user/get_by_username/<username>` - Get user info by username
+- `GET /user/get_profile/<user_id>` - Get user profile
+- `PUT /user/update_status/<user_id>` - Update user status (online/offline)
+- `PUT /user/update_last_seen/<user_id>` - Update last seen timestamp
+- `PUT /user/toggle_last_seen/<user_id>` - Toggle last seen feature
+- `GET /user/get_user_status/<user_id>` - Get user status info
+- `GET /user/get_friends_status/<user_id>` - Get friends' status info
 
-### Arkadaşlık İşlemleri (`/friendship`)
-- `POST /friendship/add` - Arkadaş ekleme isteği gönderme
-- `GET /friendship/list/<user_id>` - Arkadaş listesi
-- `GET /friendship/pending/<user_id>` - Bekleyen arkadaşlık istekleri
-- `GET /friendship/sent/<user_id>` - Gönderilen arkadaşlık istekleri
-- `DELETE /friendship/remove` - Arkadaşlığı sonlandırma
+### Friendship Operations (`/friendship`)
+- `POST /friendship/add` - Send friend request
+- `GET /friendship/list/<user_id>` - Get friends list
+- `GET /friendship/pending/<user_id>` - Get pending friend requests
+- `GET /friendship/sent/<user_id>` - Get sent friend requests
+- `DELETE /friendship/remove` - End friendship
 
-### Mesaj İşlemleri (`/message`)
-- `GET /message/history/<user_id>/<friend_id>` - İki kullanıcı arasındaki mesaj geçmişi
-- `GET /message/active_chats/<user_id>` - Aktif sohbetler
-- `DELETE /message/<message_id>` - Mesaj silme
-- `DELETE /message/chat/<user_id>/<friend_id>` - Sohbet silme
+### Message Operations (`/message`)
+- `GET /message/history/<user_id>/<friend_id>` - Get message history between two users
+- `GET /message/active_chats/<user_id>` - Get active chats
+- `DELETE /message/<message_id>` - Delete message
+- `DELETE /message/chat/<user_id>/<friend_id>` - Delete chat
 
-### Bildirim İşlemleri (`/notification`)
-- `GET /notification/get_notifications/<user_id>` - Kullanıcının tüm bildirimlerini getir
-- `POST /notification/mark_read/<notification_id>/<user_id>` - Bildirimi okundu olarak işaretle
-- `POST /notification/mark_all_read/<user_id>` - Tüm bildirimleri okundu olarak işaretle
-- `GET /notification/unread_count/<user_id>` - Okunmamış bildirim sayısını getir
-- `DELETE /notification/delete/<notification_id>` - Bildirimi sil
+### Notification Operations (`/notification`)
+- `GET /notification/get_notifications/<user_id>` - Get all user notifications
+- `POST /notification/mark_read/<notification_id>/<user_id>` - Mark notification as read
+- `POST /notification/mark_all_read/<user_id>` - Mark all notifications as read
+- `GET /notification/unread_count/<user_id>` - Get unread notification count
+- `DELETE /notification/delete/<notification_id>` - Delete notification
 
 ### WebSocket Events
-- `connect` - Bağlantı kurma
-- `disconnect` - Bağlantı kesme
-- `join` - Odaya katılma
-- `leave` - Odadan ayrılma
-- `send_message` - Mesaj gönderme
-- `receive_message` - Mesaj alma
-- `message_deleted` - Mesaj silme bildirimi
-- `chat_deleted` - Sohbet silme bildirimi
-- `get_notifications` - Bildirim sayısını alma
-- `notification_count` - Bildirim sayısı güncelleme
-- `receive_notification` - Yeni bildirim alma
-- `notification_read` - Bildirim okundu bildirimi
-- `friend_request_received` - Arkadaşlık isteği alma
-- `friend_request_sent` - Arkadaşlık isteği gönderme
-- `friend_request_accepted` - Arkadaşlık isteği kabul edildi bildirimi
+- `connect` - Establish connection
+- `disconnect` - Disconnect
+- `join` - Join room
+- `leave` - Leave room
+- `send_message` - Send message
+- `receive_message` - Receive message
+- `message_deleted` - Message deletion notification
+- `chat_deleted` - Chat deletion notification
+- `get_notifications` - Get notification count
+- `notification_count` - Update notification count
+- `receive_notification` - Receive new notification
+- `notification_read` - Notification read notification
+- `friend_request_received` - Receive friend request
+- `friend_request_sent` - Send friend request
+- `friend_request_accepted` - Friend request accepted notification
 
-### API İstek Formatları
+### API Request Formats
 
-#### Kullanıcı Kaydı
+#### User Registration
 ```json
 POST /user/register
 {
@@ -354,7 +354,7 @@ POST /user/register
 }
 ```
 
-#### Kullanıcı Girişi
+#### User Login
 ```json
 POST /user/login
 {
@@ -363,7 +363,7 @@ POST /user/login
 }
 ```
 
-#### Arkadaş Ekleme
+#### Add Friend
 ```json
 POST /friendship/add
 {
@@ -372,7 +372,7 @@ POST /friendship/add
 }
 ```
 
-#### Mesaj Gönderme (WebSocket)
+#### Send Message (WebSocket)
 ```json
 {
     "sender_id": "integer",
@@ -381,7 +381,7 @@ POST /friendship/add
 }
 ```
 
-#### Bildirim İşaretleme
+#### Mark Notification
 ```json
 POST /notification/mark_read/<notification_id>/<user_id>
 {
@@ -390,7 +390,7 @@ POST /notification/mark_read/<notification_id>/<user_id>
 }
 ```
 
-#### Tüm Bildirimleri İşaretleme
+#### Mark All Notifications
 ```json
 POST /notification/mark_all_read/<user_id>
 {
@@ -398,7 +398,7 @@ POST /notification/mark_all_read/<user_id>
 }
 ```
 
-#### Bildirim Silme
+#### Delete Notification
 ```json
 DELETE /notification/delete/<notification_id>
 {
@@ -407,27 +407,27 @@ DELETE /notification/delete/<notification_id>
 }
 ```
 
-### API Yanıt Formatları
+### API Response Formats
 
-#### Başarılı Yanıt
+#### Success Response
 ```json
 {
     "status": "success",
-    "message": "İşlem başarılı",
+    "message": "Operation successful",
     "data": { ... }
 }
 ```
 
-#### Hata Yanıtı
+#### Error Response
 ```json
 {
     "status": "error",
-    "message": "Hata mesajı",
+    "message": "Error message",
     "error_code": "integer"
 }
 ```
 
-#### Başarılı Bildirim Yanıtı
+#### Success Notification Response
 ```json
 {
     "status": "success",
@@ -445,7 +445,7 @@ DELETE /notification/delete/<notification_id>
 }
 ```
 
-#### Bildirim Sayacı Yanıtı
+#### Notification Counter Response
 ```json
 {
     "status": "success",
@@ -453,91 +453,91 @@ DELETE /notification/delete/<notification_id>
 }
 ```
 
-## 🔒 Güvenlik
-- CORS koruması
-- SQL injection koruması
-- XSS koruması
-- Güvenli şifreleme
-- Oturum yönetimi
+## 🔒 Security
+- CORS protection
+- SQL injection protection
+- XSS protection
+- Secure encryption
+- Session management
 
-## 🤝 Projeye Katkıda Bulunma
+## 🤝 Contributing
 
-Bu projeye katkıda bulunmak isterseniz, aşağıdaki adımları izleyebilirsiniz:
+If you want to contribute to this project, you can follow these steps:
 
-1. **Projeyi Fork Edin**
-   - GitHub'da projenin sayfasına gidin
-   - Sağ üstteki "Fork" butonuna tıklayın
-   - Bu işlem projenin bir kopyasını kendi hesabınıza oluşturacak
+1. **Fork the Project**
+   - Go to the project page on GitHub
+   - Click the "Fork" button in the top right
+   - This will create a copy of the project in your account
 
-2. **Geliştirme Ortamını Hazırlayın**
-   - Fork ettiğiniz projeyi bilgisayarınıza indirin:
+2. **Prepare Development Environment**
+   - Download the forked project to your computer:
      ```bash
      git clone https://github.com/GokhanGuclu/chatapp.git
      ```
-   - Proje klasörüne gidin:
+   - Navigate to project directory:
      ```bash
      cd chatapp
      ```
-   - Yeni bir geliştirme dalı (branch) oluşturun:
+   - Create a new development branch:
      ```bash
-     git checkout -b yeni-ozellik
+     git checkout -b new-feature
      ```
 
-3. **Değişikliklerinizi Yapın**
-   - Kodunuzu düzenleyin
-   - Yeni özellikler ekleyin
-   - Hataları düzeltin
-   - Kodunuzu test edin
+3. **Make Your Changes**
+   - Edit your code
+   - Add new features
+   - Fix bugs
+   - Test your code
 
-4. **Değişikliklerinizi Gönderin**
-   - Değişikliklerinizi commit edin:
+4. **Submit Your Changes**
+   - Commit your changes:
      ```bash
      git add .
-     git commit -m "Yeni özellik: [özelliğin kısa açıklaması]"
+     git commit -m "New feature: [brief description of feature]"
      ```
-   - Değişikliklerinizi GitHub'a gönderin:
+   - Push your changes to GitHub:
      ```bash
-     git push origin yeni-ozellik
+     git push origin new-feature
      ```
 
-5. **Pull Request Oluşturun**
-   - GitHub'da fork ettiğiniz projenin sayfasına gidin
-   - "Pull Request" butonuna tıklayın
-   - Değişikliklerinizi açıklayan bir başlık ve detaylı açıklama yazın
-   - "Create Pull Request" butonuna tıklayın
+5. **Create Pull Request**
+   - Go to your forked project page on GitHub
+   - Click "Pull Request" button
+   - Write a title and detailed description explaining your changes
+   - Click "Create Pull Request" button
 
-### Katkıda Bulunurken Dikkat Edilecekler
+### Things to Consider When Contributing
 
-- Kod yazarken mevcut kod stilini takip edin
-- Yeni özellikler eklerken dokümantasyonu güncelleyin
-- Test yazmayı unutmayın
-- Commit mesajlarınızı açıklayıcı yazın
-- Büyük değişiklikler yapmadan önce bir issue açın ve tartışın
+- Follow existing code style when writing code
+- Update documentation when adding new features
+- Don't forget to write tests
+- Write descriptive commit messages
+- Open an issue and discuss before making major changes
 
-### Geliştirme Kuralları
+### Development Rules
 
-1. **Kod Stili**
-   - Python için PEP 8 standartlarını takip edin
-   - JavaScript/React için ESLint kurallarına uyun
-   - Değişken ve fonksiyon isimleri anlamlı olsun
-   - Kodunuzu yorum satırlarıyla açıklayın
+1. **Code Style**
+   - Follow PEP 8 standards for Python
+   - Follow ESLint rules for JavaScript/React
+   - Use meaningful variable and function names
+   - Explain your code with comments
 
-2. **Commit Mesajları**
-   - Türkçe veya İngilizce yazabilirsiniz
-   - Mesajın ilk satırı kısa ve öz olsun
-   - Gerekirse detaylı açıklama ekleyin
-   - Örnek: "feat: Kullanıcı profil resmi yükleme özelliği eklendi"
+2. **Commit Messages**
+   - You can write in Turkish or English
+   - First line should be short and concise
+   - Add detailed description if needed
+   - Example: "feat: Added user profile picture upload feature"
 
-3. **Pull Request'ler**
-   - Başlık açıklayıcı olsun
-   - Yapılan değişiklikleri detaylı açıklayın
-   - Varsa ilgili issue'ları belirtin
-   - Ekran görüntüleri veya test sonuçları ekleyin
+3. **Pull Requests**
+   - Title should be descriptive
+   - Explain changes in detail
+   - Reference related issues if any
+   - Add screenshots or test results
 
-## 📄 Lisans
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+## 📄 License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 📞 İletişim
+## 📞 Contact
 Gökhan Güçlü - [@github](https://github.com/GokhanGouclu) - [@email](gokanguclu@outlook.com)
 
-Proje Linki: [https://github.com/Gokhanguclu/chatapp](https://github.com/GokhanGuclu/chatapp)
+Project Link: [https://github.com/Gokhanguclu/chatapp](https://github.com/GokhanGuclu/chatapp)

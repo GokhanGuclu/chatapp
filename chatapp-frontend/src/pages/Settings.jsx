@@ -4,8 +4,6 @@ import axios from 'axios';
 import Layout from '../components/Layout';
 import { 
   IoSettingsOutline, 
-  IoMoonOutline, 
-  IoSunnyOutline, 
   IoNotificationsOutline, 
   IoLockClosedOutline,
   IoPersonOutline,
@@ -19,8 +17,6 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
-  const [darkMode, setDarkMode] = useState(true);
-  const [notifications, setNotifications] = useState(true);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -48,6 +44,26 @@ const Settings = () => {
   const [passwordModalError, setPasswordModalError] = useState('');
   const [passwordModalSuccess, setPasswordModalSuccess] = useState('');
 
+  // Bildirim ayarları için state'ler - başlangıçta boş
+  const [notificationSettings, setNotificationSettings] = useState({
+    messageNotifications: false,
+    friendshipNotifications: false,
+    systemNotifications: false,
+    notificationSound: false,
+    notificationsEnabled: false
+  });
+
+  // Sayfa ilk yüklendiğinde localStorage'dan notificationSound ayarını oku
+  useEffect(() => {
+    const soundSetting = localStorage.getItem('notificationSound');
+    if (soundSetting !== null) {
+      setNotificationSettings(prev => ({
+        ...prev,
+        notificationSound: soundSetting === 'true'
+      }));
+    }
+  }, []);
+
   // User kontrolü
   useEffect(() => {
     const userId = localStorage.getItem('userId');
@@ -67,15 +83,40 @@ const Settings = () => {
       if (!user.id) return;
 
       try {
-        const response = await axios.get(`http://127.0.0.5:5000/user/get_profile/${user.id}`);
-        setStatus(response.data.status);
-        setTempStatus(response.data.status);
-        setDisplayName(response.data.display_name || '');
-        setTempDisplayName(response.data.display_name || '');
-        setEmail(response.data.email || '');
+        // Profil bilgilerini al
+        const profileResponse = await axios.get(`http://127.0.0.5:5000/user/get_profile/${user.id}`);
+        setStatus(profileResponse.data.status);
+        setTempStatus(profileResponse.data.status);
+        setDisplayName(profileResponse.data.display_name || '');
+        setTempDisplayName(profileResponse.data.display_name || '');
+        setEmail(profileResponse.data.email || '');
+
+        // Bildirim ayarlarını al
+        const notificationResponse = await axios.post('http://127.0.0.5:5000/notification_settings/get_notification_settings', {
+          user_id: user.id
+        });
+
+        if (notificationResponse.data.settings) {
+          const settings = notificationResponse.data.settings;
+          console.log('Veritabanından alınan bildirim ayarları:', settings);
+          // En az bir bildirim açık mı kontrolü
+          const anyNotificationEnabled = settings.receive_message_notifications || 
+                                        settings.receive_friend_notifications || 
+                                        settings.receive_system_notifications;
+          // Bildirim sesi ayarını localStorage'a kaydet
+          localStorage.setItem('notificationSound', String(settings.notification_sound_enabled));
+          setNotificationSettings({
+            notificationsEnabled: anyNotificationEnabled,
+            messageNotifications: settings.receive_message_notifications,
+            friendshipNotifications: settings.receive_friend_notifications,
+            systemNotifications: settings.receive_system_notifications,
+            notificationSound: localStorage.getItem('notificationSound') === 'true'
+          });
+        }
+
         // Profil fotoğrafı URL'sini önbellek kontrolü ile oluştur
         const timestamp = new Date().getTime();
-        const profileImageUrl = `http://127.0.0.5:5000/pp/${response.data.profile_picture}?t=${timestamp}`;
+        const profileImageUrl = `http://127.0.0.5:5000/pp/${profileResponse.data.profile_picture}?t=${timestamp}`;
         setProfileImage(profileImageUrl);
         setTempProfileImage(profileImageUrl);
       } catch (error) {
@@ -96,6 +137,16 @@ const Settings = () => {
     const hasDisplayNameChanged = tempDisplayName !== displayName;
     setHasChanges(hasProfileImageChanged || hasStatusChanged || hasDisplayNameChanged);
   }, [tempProfileImage, tempStatus, tempDisplayName, profileImage, status, displayName]);
+
+  // notificationsEnabled'ı her render'da otomatik olarak güncelle
+  useEffect(() => {
+    const enabled = notificationSettings.messageNotifications ||
+                   notificationSettings.friendshipNotifications ||
+                   notificationSettings.systemNotifications;
+    if (notificationSettings.notificationsEnabled !== enabled) {
+      setNotificationSettings(prev => ({ ...prev, notificationsEnabled: enabled }));
+    }
+  }, [notificationSettings.messageNotifications, notificationSettings.friendshipNotifications, notificationSettings.systemNotifications]);
 
   const handleOpenPasswordModal = () => {
     setShowPasswordModal(true);
@@ -237,6 +288,183 @@ const Settings = () => {
     localStorage.clear();
     navigate('/login', { replace: true });
     window.location.reload();
+  };
+
+  // Bildirim ayarlarını güncelle
+  const handleNotificationSettingChange = async (setting) => {
+    try {
+      // Önce state'i güncelle
+      const newSettings = {
+        ...notificationSettings,
+        [setting]: !notificationSettings[setting]
+      };
+
+      // Eğer bildirim sesi ayarı değişiyorsa localStorage'a kaydet
+      if (setting === 'notificationSound') {
+        localStorage.setItem('notificationSound', String(newSettings.notificationSound));
+      }
+
+      // Eğer ana toggle değilse, diğer bildirimlerin durumuna göre notificationsEnabled'ı güncelle
+      if (setting !== 'notificationsEnabled') {
+        const otherSettings = ['messageNotifications', 'friendshipNotifications', 'systemNotifications', 'notificationSound']
+          .filter(s => s !== setting)
+          .map(s => notificationSettings[s]);
+        newSettings.notificationsEnabled = newSettings[setting] || otherSettings.some(s => s);
+      }
+
+      // State'i hemen güncelle
+      setNotificationSettings(newSettings);
+
+      // Backend API endpoint'lerine göre ayarları güncelle
+      let endpoint = '';
+      let requestData = { user_id: user.id };
+
+      // Controller'daki parametre isimlerine göre request data'yı hazırla
+      switch (setting) {
+        case 'messageNotifications':
+          endpoint = '/notification_settings/message_notification';
+          requestData = {
+            user_id: user.id,
+            message_notification: newSettings.messageNotifications
+          };
+          break;
+        case 'friendshipNotifications':
+          endpoint = '/notification_settings/friend_notification';
+          requestData = {
+            user_id: user.id,
+            friend_notification: newSettings.friendshipNotifications
+          };
+          break;
+        case 'systemNotifications':
+          endpoint = '/notification_settings/system_notification';
+          requestData = {
+            user_id: user.id,
+            system_notification: newSettings.systemNotifications
+          };
+          break;
+        case 'notificationSound':
+          endpoint = '/notification_settings/notification_sound';
+          requestData = {
+            user_id: user.id,
+            notification_sound: newSettings.notificationSound
+          };
+          break;
+        default:
+          throw new Error('Geçersiz bildirim ayarı');
+      }
+
+      // API'ye gönder ve controller'dan gelen response'u kontrol et
+      const response = await axios.post(`http://127.0.0.5:5000${endpoint}`, requestData);
+      
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+
+      // Başarı mesajını göster
+      setSuccess(response.data.message || 'Bildirim ayarları güncellendi!');
+      
+      // Hata mesajını temizle
+      setError('');
+
+      // Güncelleme başarılı olduktan sonra ayarları tekrar çek
+      const notificationResponse = await axios.post('http://127.0.0.5:5000/notification_settings/get_notification_settings', {
+        user_id: user.id
+      });
+
+      if (notificationResponse.data.settings) {
+        const settings = notificationResponse.data.settings;
+        console.log('Güncellenmiş bildirim ayarları:', settings);
+        // En az bir bildirim açık mı kontrolü
+        const anyNotificationEnabled = settings.receive_message_notifications || 
+                                      settings.receive_friend_notifications || 
+                                      settings.receive_system_notifications;
+        // Bildirim sesi ayarını localStorage'a kaydet
+        localStorage.setItem('notificationSound', String(settings.notification_sound_enabled));
+        setNotificationSettings({
+          notificationsEnabled: anyNotificationEnabled,
+          messageNotifications: settings.receive_message_notifications,
+          friendshipNotifications: settings.receive_friend_notifications,
+          systemNotifications: settings.receive_system_notifications,
+          notificationSound: localStorage.getItem('notificationSound') === 'true'
+        });
+      }
+    } catch (error) {
+      console.error('Bildirim ayarı güncellenirken hata:', error);
+      // Hata durumunda eski state'e geri dön
+      setNotificationSettings(notificationSettings);
+      setError(error.response?.data?.error || 'Bildirim ayarları güncellenirken bir hata oluştu!');
+      setSuccess('');
+    }
+  };
+
+  // Tüm bildirimleri aç/kapat
+  const handleToggleAllNotifications = async () => {
+    try {
+      // Önce state'i güncelle
+      const newSettings = {
+        ...notificationSettings,
+        notificationsEnabled: !notificationSettings.notificationsEnabled,
+        // Tüm bildirimleri ana toggle'a bağlı olarak güncelle
+        messageNotifications: !notificationSettings.notificationsEnabled,
+        friendshipNotifications: !notificationSettings.notificationsEnabled,
+        systemNotifications: !notificationSettings.notificationsEnabled,
+        notificationSound: !notificationSettings.notificationsEnabled
+      };
+
+      // State'i hemen güncelle
+      setNotificationSettings(newSettings);
+
+      // Controller'daki parametre yapısına göre request data'yı hazırla
+      const requestData = {
+        user_id: user.id,
+        notification_settings: {
+          receive_message_notifications: newSettings.messageNotifications,
+          receive_friend_notifications: newSettings.friendshipNotifications,
+          receive_system_notifications: newSettings.systemNotifications,
+          notification_sound_enabled: newSettings.notificationSound
+        }
+      };
+
+      // API'ye gönder ve controller'dan gelen response'u kontrol et
+      const response = await axios.post('http://127.0.0.5:5000/notification_settings/all_notification_settings', requestData);
+
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+
+      // Başarı mesajını göster
+      setSuccess(response.data.message || (notificationSettings.notificationsEnabled ? 'Tüm bildirimler kapatıldı!' : 'Tüm bildirimler açıldı!'));
+      setError('');
+
+      // Güncelleme başarılı olduktan sonra ayarları tekrar çek
+      const notificationResponse = await axios.post('http://127.0.0.5:5000/notification_settings/get_notification_settings', {
+        user_id: user.id
+      });
+
+      if (notificationResponse.data.settings) {
+        const settings = notificationResponse.data.settings;
+        console.log('Güncellenmiş bildirim ayarları:', settings);
+        // En az bir bildirim açık mı kontrolü
+        const anyNotificationEnabled = settings.receive_message_notifications || 
+                                      settings.receive_friend_notifications || 
+                                      settings.receive_system_notifications;
+        // Bildirim sesi ayarını localStorage'a kaydet
+        localStorage.setItem('notificationSound', String(settings.notification_sound_enabled));
+        setNotificationSettings({
+          notificationsEnabled: anyNotificationEnabled,
+          messageNotifications: settings.receive_message_notifications,
+          friendshipNotifications: settings.receive_friend_notifications,
+          systemNotifications: settings.receive_system_notifications,
+          notificationSound: localStorage.getItem('notificationSound') === 'true'
+        });
+      }
+    } catch (error) {
+      console.error('Tüm bildirimler güncellenirken hata:', error);
+      // Hata durumunda eski state'e geri dön
+      setNotificationSettings(notificationSettings);
+      setError(error.response?.data?.error || 'Bildirim ayarları güncellenirken bir hata oluştu!');
+      setSuccess('');
+    }
   };
 
   // User yoksa loading göster
@@ -552,8 +780,7 @@ const Settings = () => {
 
   const renderAppSettings = () => (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      {/* 
-      // Tema Kartı 
+      {/* Bildirimler Kartı */}
       <div style={{
         backgroundColor: '#1a1a1a',
         borderRadius: '16px',
@@ -563,85 +790,296 @@ const Settings = () => {
       }}>
         <div style={{
           display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '10px',
           marginBottom: '20px'
         }}>
-          {darkMode ? <IoMoonOutline size={24} color="#0084ff" /> : <IoSunnyOutline size={24} color="#0084ff" />}
-          <h3 style={{ margin: 0, color: '#fff', fontSize: '18px' }}>Tema</h3>
-        </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
-        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <IoNotificationsOutline size={24} color="#0084ff" />
+            <h3 style={{ margin: 0, color: '#fff', fontSize: '18px' }}>Bildirimler</h3>
+          </div>
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={handleToggleAllNotifications}
             style={{
-              padding: '12px 24px',
-              backgroundColor: darkMode ? '#0084ff' : '#333',
-              color: '#fff',
+              width: '44px',
+              height: '24px',
+              backgroundColor: notificationSettings.notificationsEnabled ? '#0084ff' : '#666',
+              borderRadius: '12px',
               border: 'none',
-              borderRadius: '8px',
+              position: 'relative',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
               transition: 'background-color 0.2s'
             }}
-            onMouseOver={e => e.currentTarget.style.backgroundColor = darkMode ? '#0073e6' : '#444'}
-            onMouseOut={e => e.currentTarget.style.backgroundColor = darkMode ? '#0084ff' : '#333'}
           >
-            {darkMode ? <IoSunnyOutline size={20} /> : <IoMoonOutline size={20} />}
-            {darkMode ? 'Açık Tema' : 'Koyu Tema'}
+            <div style={{
+              width: '20px',
+              height: '20px',
+              backgroundColor: '#fff',
+              borderRadius: '50%',
+              position: 'absolute',
+              top: '2px',
+              left: notificationSettings.notificationsEnabled ? '22px' : '2px',
+              transition: 'left 0.2s'
+            }} />
           </button>
         </div>
-      </div>
 
-      // Bildirimler Kartı 
-      <div style={{
-        backgroundColor: '#1a1a1a',
-        borderRadius: '16px',
-        padding: '30px',
-        marginBottom: '24px',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          marginBottom: '20px'
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '16px',
+          opacity: notificationSettings.notificationsEnabled ? 1 : 0.5,
+          pointerEvents: notificationSettings.notificationsEnabled ? 'auto' : 'none',
+          transition: 'opacity 0.3s'
         }}>
-          <IoNotificationsOutline size={24} color="#0084ff" />
-          <h3 style={{ margin: 0, color: '#fff', fontSize: '18px' }}>Bildirimler</h3>
+          {/* Mesaj Bildirimleri */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px',
+            backgroundColor: '#333',
+            borderRadius: '8px',
+            transition: 'background-color 0.2s',
+            cursor: 'pointer'
+          }}
+          onClick={() => handleNotificationSettingChange('messageNotifications')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: '#0084ff20',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IoNotificationsOutline size={24} color="#0084ff" />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontSize: '15px', fontWeight: 500 }}>Mesaj Bildirimleri</div>
+                <div style={{ color: '#b3b3b3', fontSize: '13px' }}>Yeni mesajlar için bildirim al</div>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNotificationSettingChange('messageNotifications');
+              }}
+              style={{
+                width: '44px',
+                height: '24px',
+                backgroundColor: notificationSettings.messageNotifications ? '#0084ff' : '#666',
+                borderRadius: '12px',
+                border: 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '2px',
+                left: notificationSettings.messageNotifications ? '22px' : '2px',
+                transition: 'left 0.2s'
+              }} />
+            </button>
+          </div>
+
+          {/* Arkadaşlık Bildirimleri */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px',
+            backgroundColor: '#333',
+            borderRadius: '8px',
+            transition: 'background-color 0.2s',
+            cursor: 'pointer'
+          }}
+          onClick={() => handleNotificationSettingChange('friendshipNotifications')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: '#0084ff20',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IoPersonOutline size={24} color="#0084ff" />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontSize: '15px', fontWeight: 500 }}>Arkadaşlık Bildirimleri</div>
+                <div style={{ color: '#b3b3b3', fontSize: '13px' }}>Arkadaşlık istekleri için bildirim al</div>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNotificationSettingChange('friendshipNotifications');
+              }}
+              style={{
+                width: '44px',
+                height: '24px',
+                backgroundColor: notificationSettings.friendshipNotifications ? '#0084ff' : '#666',
+                borderRadius: '12px',
+                border: 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '2px',
+                left: notificationSettings.friendshipNotifications ? '22px' : '2px',
+                transition: 'left 0.2s'
+              }} />
+            </button>
+          </div>
+
+          {/* Sistem Bildirimleri */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px',
+            backgroundColor: '#333',
+            borderRadius: '8px',
+            transition: 'background-color 0.2s',
+            cursor: 'pointer'
+          }}
+          onClick={() => handleNotificationSettingChange('systemNotifications')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: '#0084ff20',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IoSettingsOutline size={24} color="#0084ff" />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontSize: '15px', fontWeight: 500 }}>Sistem Bildirimleri</div>
+                <div style={{ color: '#b3b3b3', fontSize: '13px' }}>Sistem güncellemeleri için bildirim al</div>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNotificationSettingChange('systemNotifications');
+              }}
+              style={{
+                width: '44px',
+                height: '24px',
+                backgroundColor: notificationSettings.systemNotifications ? '#0084ff' : '#666',
+                borderRadius: '12px',
+                border: 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '2px',
+                left: notificationSettings.systemNotifications ? '22px' : '2px',
+                transition: 'left 0.2s'
+              }} />
+            </button>
+          </div>
+
+          {/* Bildirim Sesi */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px',
+            backgroundColor: '#333',
+            borderRadius: '8px',
+            transition: 'background-color 0.2s',
+            cursor: 'pointer'
+          }}
+          onClick={() => handleNotificationSettingChange('notificationSound')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: '#0084ff20',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IoNotificationsOutline size={24} color="#0084ff" />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontSize: '15px', fontWeight: 500 }}>Bildirim Sesi</div>
+                <div style={{ color: '#b3b3b3', fontSize: '13px' }}>Bildirimler için ses çal</div>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNotificationSettingChange('notificationSound');
+              }}
+              style={{
+                width: '44px',
+                height: '24px',
+                backgroundColor: notificationSettings.notificationSound ? '#0084ff' : '#666',
+                borderRadius: '12px',
+                border: 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '2px',
+                left: notificationSettings.notificationSound ? '22px' : '2px',
+                transition: 'left 0.2s'
+              }} />
+            </button>
+          </div>
         </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
-        }}>
-          <button
-            onClick={() => setNotifications(!notifications)}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: notifications ? '#0084ff' : '#333',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={e => e.currentTarget.style.backgroundColor = notifications ? '#0073e6' : '#444'}
-            onMouseOut={e => e.currentTarget.style.backgroundColor = notifications ? '#0084ff' : '#333'}
-          >
-            {notifications ? 'Bildirimleri Kapat' : 'Bildirimleri Aç'}
-          </button>
-        </div>
+
+        {/* Uyarı mesajı sadece hepsi kapalıysa göster */}
+        {!(notificationSettings.messageNotifications || notificationSettings.friendshipNotifications || notificationSettings.systemNotifications) && (
+          <div style={{
+            marginTop: '16px',
+            padding: '12px',
+            backgroundColor: '#333',
+            borderRadius: '8px',
+            color: '#b3b3b3',
+            fontSize: '14px',
+            textAlign: 'center'
+          }}>
+            Tüm bildirimler şu anda kapalı. Bildirimleri açmak için üstteki düğmeyi kullanın.
+          </div>
+        )}
       </div>
-      */}
 
       {/* Çıkış Kartı */}
       <div style={{

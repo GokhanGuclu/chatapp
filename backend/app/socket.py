@@ -122,6 +122,50 @@ def handle_send_message(data):
         return
 
     try:
+        # Alıcının bildirim ayarlarını al
+        sql_settings = text("""
+            SELECT notification_sound_enabled, receive_message_notifications
+            FROM notification_settings
+            WHERE user_id = :receiver_id
+        """)
+        settings_result = db.session.execute(sql_settings, {"receiver_id": receiver_id}).fetchone()
+        
+        if not settings_result:
+            emit('error', {'message': 'Alıcı kullanıcı bulunamadı.'}, room=sender_id)
+            return
+
+        # Eğer alıcı mesaj bildirimlerini kapalı tutuyorsa, bildirim oluşturma
+        if not settings_result.receive_message_notifications:
+            # Sadece mesajı gönder, bildirim oluşturma
+            sql_message = text("""
+                INSERT INTO messages (sender_id, receiver_id, content)
+                VALUES (:sender_id, :receiver_id, :content);
+                SELECT SCOPE_IDENTITY() as message_id;
+            """)
+            result = db.session.execute(sql_message, {
+                "sender_id": sender_id,
+                "receiver_id": receiver_id,
+                "content": message
+            })
+            message_id = result.fetchone().message_id
+            db.session.commit()
+
+            # Mesajı gönder
+            emit('receive_message', {
+                'id': message_id,
+                'from': sender_id,
+                'message': message,
+                'notification_sound_enabled': settings_result.notification_sound_enabled
+            }, room=receiver_id)
+
+            emit('receive_message', {
+                'id': message_id,
+                'from': sender_id,
+                'message': message,
+                'notification_sound_enabled': settings_result.notification_sound_enabled
+            }, room=sender_id)
+            return
+
         # Stored procedure ile mesaj ve bildirim ekle
         sql = text("""
             EXEC sp_SendMessageAndNotify
@@ -167,13 +211,15 @@ def handle_send_message(data):
         emit('receive_message', {
             'id': row.id,
             'from': sender_id,
-            'message': message
+            'message': message,
+            'notification_sound_enabled': settings_result.notification_sound_enabled
         }, room=receiver_id)
 
         emit('receive_message', {
             'id': row.id,
             'from': sender_id,
-            'message': message
+            'message': message,
+            'notification_sound_enabled': settings_result.notification_sound_enabled
         }, room=sender_id)
 
         # Bildirimi anlık olarak gönder
@@ -183,7 +229,8 @@ def handle_send_message(data):
                 'type': notif_row.notification_type,
                 'content': notif_row.content,
                 'is_read': notif_row.is_read,
-                'created_at': str(notif_row.created_at)
+                'created_at': str(notif_row.created_at),
+                'notification_sound_enabled': settings_result.notification_sound_enabled
             }, room=receiver_id)
 
     except Exception as e:
@@ -191,78 +238,66 @@ def handle_send_message(data):
         print(f"Mesaj gönderilirken hata: {str(e)}")
         emit('error', {'message': 'Mesaj gönderilirken hata oluştu.'}, room=sender_id)
 
-def send_friend_request(to_user_id, from_user_id, from_username, friendship_id):
-    print(f"Arkadaşlık isteği gönderiliyor: {from_user_id} -> {to_user_id}, friendship_id: {friendship_id}")
+def send_friend_request(to_user_id, from_user_id, from_username, friendship_id=None):
+    print(f"Arkadaşlık isteği gönderiliyor: {from_user_id} -> {to_user_id}")
     
-    # Bildirim sayısını al
-    sql_count = text("""
-        SELECT COUNT(*) as count 
-        FROM notifications 
-        WHERE user_id = :user_id AND is_read = 0 AND type = 'friend_request'
-    """)
-    result = db.session.execute(sql_count, {"user_id": to_user_id}).fetchone()
-    unread_count = result.count if result else 0
-    print(f"Okunmamış arkadaşlık isteği bildirimi sayısı: {unread_count}")
-
-    # Eğer aynı kullanıcıdan bekleyen bir istek varsa, yeni bildirim oluşturma
-    sql_check = text("""
-        SELECT COUNT(*) as count 
-        FROM notifications n
-        JOIN friendships f ON f.id = :friendship_id
-        WHERE n.user_id = :user_id 
-        AND n.type = 'friend_request' 
-        AND n.is_read = 0
-        AND f.status = 'pending'
-    """)
-    existing_notification = db.session.execute(sql_check, {
-        "user_id": to_user_id,
-        "friendship_id": friendship_id
-    }).fetchone()
-
-    if not existing_notification or existing_notification.count == 0:
-        # Bildirim oluştur
-        sql_insert = text("""
-            INSERT INTO notifications (user_id, type, content, is_read, created_at, friendship_id)
-            VALUES (:user_id, 'friend_request', :content, 0, GETDATE(), :friendship_id)
+    try:
+        # Stored procedure ile arkadaşlık isteği ve bildirim ekle
+        sql = text("""
+            EXEC sp_SendFriendRequestAndNotify
+                @sender_id=:sender_id,
+                @receiver_id=:receiver_id,
+                @sender_username=:sender_username;
         """)
-        db.session.execute(sql_insert, {
-            "user_id": to_user_id,
-            "content": f"{from_username} size arkadaşlık isteği gönderdi.",
-            "friendship_id": friendship_id
+        result = db.session.execute(sql, {
+            "sender_id": from_user_id,
+            "receiver_id": to_user_id,
+            "sender_username": from_username
         })
+        
+        # Stored procedure'den dönen friendship_id'yi al
+        row = result.fetchone()
+        if not row:
+            print("HATA: Friendship ID alınamadı!")
+            return
+            
+        friendship_id = row.friendship_id
         db.session.commit()
-        print("Bildirim veritabanına kaydedildi")
+
+        # Okunmamış bildirim sayısını al
+        sql_count = text("""
+            SELECT COUNT(*) as count 
+            FROM notifications 
+            WHERE user_id = :user_id AND is_read = 0 AND notification_type = 'friend_request'
+        """)
+        result = db.session.execute(sql_count, {"user_id": to_user_id}).fetchone()
+        unread_count = result.count if result else 0
+
+        # Alıcıya bildirim gönder
+        socketio.emit("friend_request_received", {
+            "to_user_id": str(to_user_id),
+            "from_user_id": str(from_user_id),
+            "from_username": from_username,
+            "friendship_id": int(friendship_id)
+        }, room=str(to_user_id))
+
+        # Gönderene bildirim gönder
+        to_user = db.session.execute(text("SELECT username FROM users WHERE id = :id"), {"id": to_user_id}).fetchone()
+        socketio.emit("friend_request_sent", {
+            "from_user_id": str(from_user_id),
+            "to_user_id": str(to_user_id),
+            "to_username": to_user.username,
+            "friendship_id": int(friendship_id)
+        }, room=str(from_user_id))
 
         # Bildirim sayısını güncelle
-        unread_count += 1
-        print(f"Bildirim sayısı güncelleniyor: {to_user_id} -> {unread_count}")
         socketio.emit("notification_count", {"count": unread_count}, room=str(to_user_id))
+        print("Tüm bildirimler gönderildi")
 
-    # Friendship ID'yi kontrol et
-    if not friendship_id:
-        print("HATA: Friendship ID eksik!")
-        return
-
-    # Alıcıya bildirim gönder
-    print(f"Alıcıya bildirim gönderiliyor: {to_user_id}, friendship_id: {friendship_id}")
-    socketio.emit("friend_request_received", {
-        "to_user_id": str(to_user_id),
-        "from_user_id": str(from_user_id),
-        "from_username": from_username,
-        "friendship_id": int(friendship_id)  # Integer olarak gönder
-    }, room=str(to_user_id))
-
-    # Gönderene bildirim gönder
-    to_user = db.session.execute(text("SELECT username FROM users WHERE id = :id"), {"id": to_user_id}).fetchone()
-    print(f"Gönderene bildirim gönderiliyor: {from_user_id}, friendship_id: {friendship_id}")
-    socketio.emit("friend_request_sent", {
-        "from_user_id": str(from_user_id),
-        "to_user_id": str(to_user_id),
-        "to_username": to_user.username,
-        "friendship_id": int(friendship_id)  # Integer olarak gönder
-    }, room=str(from_user_id))
-
-    print("Tüm bildirimler gönderildi")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Arkadaşlık isteği gönderilirken hata: {str(e)}")
+        socketio.emit("error", {"message": "Arkadaşlık isteği gönderilirken bir hata oluştu"}, room=str(from_user_id))
 
 def send_friend_request_accepted(user_id, friend_id, friend_username):
     # Arkadaşlık isteği kabul edildiğinde bildirim gönder

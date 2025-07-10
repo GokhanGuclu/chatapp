@@ -6,6 +6,8 @@ import Friends from '../components/Friends';
 import Layout from '../components/Layout';
 import NotificationList from '../components/NotificationList';
 import axios from 'axios';
+import io from 'socket.io-client';
+import { initializeNotificationSound, playNotificationSound } from '../utils/notificationSound';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -17,6 +19,57 @@ const Home = () => {
   const [title, setTitle] = useState('Chat App');
   const [activeChats, setActiveChats] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [activeChatId, setActiveChatId] = useState(null);
+
+  // Socket.io bağlantısı
+  useEffect(() => {
+    if (!userId) return;
+
+    console.log('Socket.io bağlantısı başlatılıyor...');
+    const socket = io('http://localhost:5000');
+    
+    socket.on('connect', () => {
+      console.log('Socket.io bağlantısı başarılı!');
+      socket.emit('join', { user_id: userId });
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket.io bağlantı hatası:', error);
+    });
+    
+    // Bildirim sesi başlat
+    console.log('Bildirim sesi başlatılıyor...');
+    initializeNotificationSound();
+
+    // Yeni bildirim geldiğinde
+    socket.on('receive_notification', (data) => {
+      console.log('Yeni bildirim alındı:', data);
+      if (data.notification_sound_enabled) {
+        playNotificationSound();
+      }
+    });
+
+    // Bildirim sayısı güncellendiğinde
+    socket.on('notification_count', (data) => {
+      window.dispatchEvent(new CustomEvent('updateNotificationCount', { detail: data.count }));
+    });
+
+    // Yeni mesaj geldiğinde
+    socket.on('receive_message', (data) => {
+      console.log('Yeni mesaj alındı:', data);
+      // Eğer aktif sohbet, mesajı gönderen kişiyle aynıysa bildirim sesi çalma
+      if (!activeChatId || String(data.from) !== String(activeChatId)) {
+        if (localStorage.getItem('notificationSound') === 'true') {
+          playNotificationSound();
+        }
+      }
+    });
+
+    return () => {
+      console.log('Socket.io bağlantısı kapatılıyor...');
+      socket.disconnect();
+    };
+  }, [userId, activeChatId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -96,6 +149,7 @@ const Home = () => {
   const handleSelectFriend = (friend) => {
     setSelectedFriend(friend);
     setSelectedMenu('chat');
+    setActiveChatId(friend.id);
   };
 
   const handleMenuSelect = (menu) => {
@@ -129,7 +183,11 @@ const Home = () => {
           position: 'relative'
         }}>
           {selectedMenu === 'friends' && (
-            <Friends friends={friends} onSelectFriend={handleSelectFriend} />
+            <Friends 
+              friends={friends} 
+              onSelectFriend={handleSelectFriend} 
+              selectedMenu={selectedMenu}
+            />
           )}
           {selectedMenu === 'chat' && selectedFriend && (
             <ChatWindow friend={selectedFriend} />

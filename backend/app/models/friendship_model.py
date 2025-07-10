@@ -37,8 +37,14 @@ class Friendship(db.Model):
         VALUES (:user_id, :friend_id, 'pending', GETDATE())
         """)
 
-        db.session.execute(sql_add_friend, {"user_id": user_id, "friend_id": friend_id})
-        db.session.commit()
+        try:
+            db.session.execute(sql_add_friend, {"user_id": user_id, "friend_id": friend_id})
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Arkadaşlık isteği oluşturulurken hata: {str(e)}")
+            raise e
 
     @staticmethod
     def get_friendship_id(user_id, friend_id):

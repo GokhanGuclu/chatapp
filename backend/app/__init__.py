@@ -42,6 +42,9 @@ def create_app():
     from app.routes.notification_route import notification_bp
     app.register_blueprint(notification_bp)
 
+    from app.routes.notification_settings_route import notification_settings_bp
+    app.register_blueprint(notification_settings_bp)
+
     @app.route('/')
     def index():
         return "Bağlantı Başarılı"

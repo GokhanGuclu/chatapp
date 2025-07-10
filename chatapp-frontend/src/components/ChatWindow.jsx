@@ -233,7 +233,7 @@ const ChatWindow = ({ friend }) => {
       
       {/* Başlık */}
       <div style={{ 
-        padding: '20px', 
+        padding: '8px 20px', // üst-alt 8px, sağ-sol 20px
         borderBottom: '1px solid #333', 
         display: 'flex', 
         justifyContent: 'space-between', 
